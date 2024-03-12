@@ -1,7 +1,6 @@
 namespace Toggle_Muter {
     public partial class ConfigureHotkeyForm : System.Windows.Forms.Form {
-        private PrimaryHotkeyTextbox primaryHotkeyTextbox;
-        private ModifierHotkeyDropdown modifierHotkeyDropdown;
+        private HotkeyTextbox hotkeyTextbox;
         private SettingsManager settingsManager;
         
         public ConfigureHotkeyForm(SettingsManager settingsManager) {
@@ -9,24 +8,12 @@ namespace Toggle_Muter {
             this.settingsManager = settingsManager;
             ShowHotkeyConfig();
 
-            // Create and configure the ModifierDropdown control
-            modifierHotkeyDropdown = new ModifierHotkeyDropdown(settingsManager.GetModifierKeyCode());
-            Controls.Add(modifierHotkeyDropdown.GetDropdown());
-
             // Create and configure the HotkeyTextbox control
-            primaryHotkeyTextbox = new PrimaryHotkeyTextbox(settingsManager.GetPrimaryKeyCode(), settingsManager.GetPrimaryText()) {
-                Location = new Point(164, 20),
+            hotkeyTextbox = new HotkeyTextbox(settingsManager.GetKeyCode(), settingsManager.GetKeyText()) {
+                Location = new Point(82, 20),
                 Width = 76
             };
-            Controls.Add(primaryHotkeyTextbox);
-
-            // Create and configure the "+" Label between the dropdown and textbox
-            Label label = new Label();
-            label.Text = "+";
-            label.Font = new Font(label.Font.FontFamily, 12, FontStyle.Bold);
-            label.Size = new Size(20, 20);
-            label.Location = new Point(141, 20);
-            Controls.Add(label);
+            Controls.Add(hotkeyTextbox);
 
             // Add the "Confirm" button on the left
             Button confirmButton = new Button {
@@ -73,9 +60,8 @@ namespace Toggle_Muter {
         }
 
         private void ConfirmButton_Click(object? sender, EventArgs e) {
-            settingsManager.SetModifierKeyCode(modifierHotkeyDropdown.GetSelectedModifier());
-            settingsManager.SetPrimaryKeyCode(primaryHotkeyTextbox.GetSelectedPrimaryKeyCode());
-            settingsManager.SetPrimaryKeyText(primaryHotkeyTextbox.GetPrimaryTextboxText());
+            settingsManager.SetKeyCode(hotkeyTextbox.GetSelectedKeyCode());
+            settingsManager.SetKeyText(hotkeyTextbox.GetTextboxText());
         }
 
         private void CloseButton_Click(object? sender, EventArgs e) {

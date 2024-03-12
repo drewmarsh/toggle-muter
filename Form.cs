@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -6,12 +7,16 @@ using Microsoft.Win32;
 namespace Toggle_Muter {
     public partial class Form : System.Windows.Forms.Form {
         private readonly NotifyIcon notifyIcon;
+        private GlobalKeyboardHook _keyboardHook;
         private ConfigureHotkeyForm? configureHotkeyForm;
         private SettingsManager settingsManager;
 
         public Form() {
             InitializeComponent();
-            settingsManager = new SettingsManager(this);
+            settingsManager = new SettingsManager(this, _keyboardHook);
+            _keyboardHook = new GlobalKeyboardHook(this, settingsManager);
+            GlobalKeyboardHook.RegisterHook();
+            
             configureHotkeyForm = null;
 
             notifyIcon = new NotifyIcon {
@@ -50,7 +55,13 @@ namespace Toggle_Muter {
             // "Exit" menu item (button)
             notifyIcon.ContextMenuStrip.Items.Add("Exit", null, MenuExit_Click);
 
-            RegHotkey();
+            // Wire up the Form_Closing event handler
+            Closing += Form_Closing;
+        }
+
+        private void Form_Closing(object? sender, CancelEventArgs e)
+        {
+            GlobalKeyboardHook.UnregisterHook();
         }
 
         // Loads the system tray icon
@@ -82,20 +93,6 @@ namespace Toggle_Muter {
             else {
                 key?.DeleteValue("Toggle Muter", false);
             }
-        }
-
-        // Registers the hotkey
-        public void RegHotkey() {
-            try {
-                RegisterHotKey(Handle, GetType().GetHashCode(), settingsManager.GetModifierKeyCode(), settingsManager.GetPrimaryKeyCode());
-            } catch (Exception ex) {
-                MessageBox.Show($"Failed to register hotkey. {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        // Unregisters the hotkey
-        public void UnregHotkey() {
-            UnregisterHotKey(Handle, GetType().GetHashCode());
         }
 
         #region Context Menu Event Handlers
@@ -137,25 +134,6 @@ namespace Toggle_Muter {
 
         #endregion
 
-        #region Window Procedure
-
-        [DllImport("user32.dll")]
-        public static extern bool RegisterHotKey(IntPtr hWnd, int id, int fsModifiers, int vlc);
-
-        [DllImport("user32.dll")]
-        public static extern bool UnregisterHotKey(IntPtr hWnd, int id);
-
-        // Window procedure for handling messages
-        protected override void WndProc(ref Message m) {
-            if (m.Msg == 0x0312) {
-                Console.WriteLine("Registered hotkey detected");
-                AdjustMuteStatus();
-            }
-            base.WndProc(ref m);
-        }
-
-        #endregion
-
         #region Audio Adjustment
 
         [DllImport("user32.dll")]
@@ -164,7 +142,7 @@ namespace Toggle_Muter {
         static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
 
         // Adjusts the mute status based on the application in focus
-        public static void AdjustMuteStatus() {
+        public void AdjustMuteStatus() {
             GetWindowThreadProcessId(GetForegroundWindow(), out var processID);
 
             var muteStatus = VolumeMixer.GetApplicationMute((int)processID);

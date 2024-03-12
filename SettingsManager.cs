@@ -1,19 +1,21 @@
+using System.Windows.Forms.Design;
+
 namespace Toggle_Muter {
     public partial class SettingsManager : System.Windows.Forms.Form {
         private Form mainForm;
-        private const int DEFAULT_MOD_KEY_CODE = 2; // Default modifier hotkey is set to the virtual keycode for 'CTRL'
-        private const int DEFAULT_PRIMARY_KEY_CODE = 42; // Default primary hotkey is set to the virtual keycode for 'B'
-        private const string DEFAULT_PRIMARY_KEY_TEXT = "B"; // Default text representation of the primary hotkey is set to 'B'
+        private GlobalKeyboardHook keyboardHook;
+        private const int DEFAULT_KEY_CODE = 42; // Default hotkey is set to the virtual keycode for 'B'
+        private const string DEFAULT_KEY_TEXT = "B"; // Default text representation of the hotkey is set to 'B'
         private const bool DEFAULT_MONOCHROMATIC_SYS_TRAY_ICON = true; // Default system tray icon style is monochromatic
-        private int modifierKeyCode;
-        private int primaryKeyCode;
-        private string primaryKeyText;
+        private int keyCode;
+        private string keyText;
         private bool monochromaticSysTrayIcon;
         private string settingsFilePath = "settings.ini";
         
-        public SettingsManager(Form mainForm) {
+        public SettingsManager(Form mainForm, GlobalKeyboardHook keyboardHook) {
             ReadValuesFromSettings();
             this.mainForm = mainForm; // Initialize mainForm
+            this.keyboardHook = keyboardHook;
         }
 
         #region Read/Write settings.ini 
@@ -37,14 +39,12 @@ namespace Toggle_Muter {
 
                         // Parse and assign the values based on the key
                         switch (key) {
-                            case "ModifierKeyCode":
-                                modifierKeyCode = Convert.ToInt32(value, 16);
+                            case "KeyCode":
+                                keyCode = Convert.ToInt32(value, 16);
                                 break;
-                            case "PrimaryKeyCode":
-                                primaryKeyCode = Convert.ToInt32(value, 16);
-                                break;
-                            case "PrimaryKeyText":
-                                primaryKeyText = value;
+                            case "KeyText":
+                                keyText = value;
+                                Console.WriteLine("Hotkey is set to '" + keyText + "'");
                                 break;
                             case "MonochromaticSysTrayIcon":
                                 monochromaticSysTrayIcon = Convert.ToBoolean(value);
@@ -55,9 +55,8 @@ namespace Toggle_Muter {
             }
             catch (Exception ex) {
                 // Handle exception for when the settings.ini file is not found
-                modifierKeyCode = DEFAULT_MOD_KEY_CODE;
-                primaryKeyCode = DEFAULT_PRIMARY_KEY_CODE;
-                primaryKeyText = DEFAULT_PRIMARY_KEY_TEXT;
+                keyCode = DEFAULT_KEY_CODE;
+                keyText = DEFAULT_KEY_TEXT;
                 monochromaticSysTrayIcon = DEFAULT_MONOCHROMATIC_SYS_TRAY_ICON;
 
                 // Check if the settings.ini file already exists
@@ -67,15 +66,13 @@ namespace Toggle_Muter {
                 }
                 
                 using (StreamWriter sw = new StreamWriter("settings.ini")) {
-                        sw.WriteLine($"ModifierKeyCode={modifierKeyCode}");
-                        sw.WriteLine($"PrimaryKeyCode={primaryKeyCode}");
-                        sw.WriteLine($"PrimaryKeyText={primaryKeyText}");
+                        sw.WriteLine($"KeyCode={keyCode}");
+                        sw.WriteLine($"KeyText={keyText}");
                         sw.WriteLine($"MonochromaticSysTrayIcon={monochromaticSysTrayIcon}");
                 }
 
-                SetModifierKeyCode(modifierKeyCode);
-                SetPrimaryKeyCode(primaryKeyCode);
-                SetPrimaryKeyText(primaryKeyText);
+                SetKeyCode(keyCode);
+                SetKeyText(keyText);
                 SetMonochromaticSysTrayIcon(monochromaticSysTrayIcon);
 
                 Console.WriteLine($"Error reading settings.ini, reading default settings instead: {ex.Message}");
@@ -85,9 +82,8 @@ namespace Toggle_Muter {
         private void WriteValuesToSettings() {
             try {
                 using StreamWriter writer = new StreamWriter(settingsFilePath);
-                writer.WriteLine($"ModifierKeyCode={modifierKeyCode:X}");
-                writer.WriteLine($"PrimaryKeyCode={primaryKeyCode:X}");
-                writer.WriteLine($"PrimaryKeyText={primaryKeyText:X}");
+                writer.WriteLine($"KeyCode={keyCode:X}");
+                writer.WriteLine($"KeyText={keyText:X}");
                 writer.WriteLine($"MonochromaticSysTrayIcon={monochromaticSysTrayIcon}");
             }
             catch (Exception ex) {
@@ -99,22 +95,15 @@ namespace Toggle_Muter {
 
         #region Setters
 
-        public void SetModifierKeyCode(int MOD_KEY_CODE) {
-            mainForm.UnregHotkey();
-            modifierKeyCode = MOD_KEY_CODE;
-            mainForm.RegHotkey();
+        public void SetKeyCode(int KEY_CODE) {
+            GlobalKeyboardHook.UnregisterHook();;
+            keyCode = KEY_CODE;
+            GlobalKeyboardHook.RegisterHook();
             WriteValuesToSettings();
         }
 
-        public void SetPrimaryKeyCode(int PRIMARY_KEY_CODE) {
-            mainForm.UnregHotkey();
-            primaryKeyCode = PRIMARY_KEY_CODE;
-            mainForm.RegHotkey();
-            WriteValuesToSettings();
-        }
-
-        public void SetPrimaryKeyText(string PRIMARY_KEY_TEXT) {
-            primaryKeyText = PRIMARY_KEY_TEXT;
+        public void SetKeyText(string KEY_TEXT) {
+            keyText = KEY_TEXT;
             WriteValuesToSettings();
         }
 
@@ -127,16 +116,12 @@ namespace Toggle_Muter {
 
         #region Getters
 
-        public int GetModifierKeyCode() {
-            return modifierKeyCode;
+        public int GetKeyCode() {
+            return keyCode;
         }
 
-        public int GetPrimaryKeyCode() {
-            return primaryKeyCode;
-        }
-
-        public string GetPrimaryText() {
-            return primaryKeyText;
+        public string GetKeyText() {
+            return keyText;
         }
 
         public bool GetMonochromaticSysTrayIcon() {

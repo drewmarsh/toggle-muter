@@ -16,6 +16,5 @@
     <EmbeddedResource Include="mono_icon.ico" />
     <EmbeddedResource Include="black_icon.ico" />
   </ItemGroup>
-
   
 </Project>
