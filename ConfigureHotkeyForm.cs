@@ -9,8 +9,8 @@ namespace Toggle_Muter {
             ShowHotkeyConfig();
 
             // Create and configure the HotkeyTextbox control
-            hotkeyTextbox = new HotkeyTextbox(settingsManager.GetKeyCode(), settingsManager.GetKeyText()) {
-                Location = new Point(82, 20),
+            hotkeyTextbox = new HotkeyTextbox(settingsManager.GetKeyCodes(), settingsManager.GetKeyText()) {
+                Location = new Point(112, 19),
                 Width = 76
             };
             Controls.Add(hotkeyTextbox);
@@ -60,7 +60,7 @@ namespace Toggle_Muter {
         }
 
         private void ConfirmButton_Click(object? sender, EventArgs e) {
-            settingsManager.SetKeyCode(hotkeyTextbox.GetSelectedKeyCode());
+            settingsManager.SetKeyCodes(hotkeyTextbox.GetSelectedKeyCodes());
             settingsManager.SetKeyText(hotkeyTextbox.GetTextboxText());
         }
 

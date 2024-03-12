@@ -4,10 +4,10 @@ namespace Toggle_Muter {
     public partial class SettingsManager : System.Windows.Forms.Form {
         private Form mainForm;
         private GlobalKeyboardHook keyboardHook;
-        private const int DEFAULT_KEY_CODE = 42; // Default hotkey is set to the virtual keycode for 'B'
-        private const string DEFAULT_KEY_TEXT = "B"; // Default text representation of the hotkey is set to 'B'
         private const bool DEFAULT_MONOCHROMATIC_SYS_TRAY_ICON = true; // Default system tray icon style is monochromatic
-        private int keyCode;
+        private static readonly int[] DEFAULT_KEY_CODES = { 42 }; // Default hotkey is set to the virtual keycode for 'B'
+        private const string DEFAULT_KEY_TEXT = "B"; // Default text representation of the hotkey is set to 'B'
+         private int[] keyCodes;
         private string keyText;
         private bool monochromaticSysTrayIcon;
         private string settingsFilePath = "settings.ini";
@@ -28,23 +28,24 @@ namespace Toggle_Muter {
                 string[] lines = File.ReadAllLines(settingsFilePath);
 
                 // Loop through each line and parse key-value pairs
-                foreach (string line in lines) {
-                    // Split the line into key and value based on the '=' separator
+                foreach (string line in lines)
+                {
                     string[] parts = line.Split('=');
 
-                    // Ensure that the line is in the correct format with key and value
-                    if (parts.Length == 2) {
+                    if (parts.Length == 2)
+                    {
                         string key = parts[0].Trim();
                         string value = parts[1].Trim();
 
-                        // Parse and assign the values based on the key
-                        switch (key) {
-                            case "KeyCode":
-                                keyCode = Convert.ToInt32(value, 16);
+                        switch (key)
+                        {
+                            case "KeyCodes":
+                                keyCodes = value.Split(',').Select(int.Parse).ToArray();
+                                Console.WriteLine("Keycode(s): '"+ string.Join(",", keyCodes) + "'");
                                 break;
                             case "KeyText":
                                 keyText = value;
-                                Console.WriteLine("Hotkey is set to '" + keyText + "'");
+                                Console.WriteLine("Hotkey is set to: '" + keyText + "'");
                                 break;
                             case "MonochromaticSysTrayIcon":
                                 monochromaticSysTrayIcon = Convert.ToBoolean(value);
@@ -55,7 +56,7 @@ namespace Toggle_Muter {
             }
             catch (Exception ex) {
                 // Handle exception for when the settings.ini file is not found
-                keyCode = DEFAULT_KEY_CODE;
+                keyCodes = DEFAULT_KEY_CODES;
                 keyText = DEFAULT_KEY_TEXT;
                 monochromaticSysTrayIcon = DEFAULT_MONOCHROMATIC_SYS_TRAY_ICON;
 
@@ -66,12 +67,12 @@ namespace Toggle_Muter {
                 }
                 
                 using (StreamWriter sw = new StreamWriter("settings.ini")) {
-                        sw.WriteLine($"KeyCode={keyCode}");
+                        sw.WriteLine($"KeyCode={keyCodes}");
                         sw.WriteLine($"KeyText={keyText}");
                         sw.WriteLine($"MonochromaticSysTrayIcon={monochromaticSysTrayIcon}");
                 }
 
-                SetKeyCode(keyCode);
+                SetKeyCodes(keyCodes);
                 SetKeyText(keyText);
                 SetMonochromaticSysTrayIcon(monochromaticSysTrayIcon);
 
@@ -79,14 +80,19 @@ namespace Toggle_Muter {
             }
         }
 
-        private void WriteValuesToSettings() {
-            try {
-                using StreamWriter writer = new StreamWriter(settingsFilePath);
-                writer.WriteLine($"KeyCode={keyCode:X}");
-                writer.WriteLine($"KeyText={keyText:X}");
-                writer.WriteLine($"MonochromaticSysTrayIcon={monochromaticSysTrayIcon}");
+        private void WriteValuesToSettings()
+        {
+            try
+            {
+                using (StreamWriter writer = new StreamWriter(settingsFilePath))
+                {
+                    writer.WriteLine($"KeyCodes={string.Join(",", keyCodes)}");
+                    writer.WriteLine($"KeyText={keyText}");
+                    writer.WriteLine($"MonochromaticSysTrayIcon={monochromaticSysTrayIcon}");
+                }
             }
-            catch (Exception ex) {
+            catch (Exception ex)
+            {
                 Console.WriteLine($"Error writing to settings.ini: {ex.Message}");
             }
         }
@@ -95,14 +101,16 @@ namespace Toggle_Muter {
 
         #region Setters
 
-        public void SetKeyCode(int KEY_CODE) {
-            GlobalKeyboardHook.UnregisterHook();;
-            keyCode = KEY_CODE;
+        public void SetKeyCodes(int[] KEY_CODES)
+        {
+            GlobalKeyboardHook.UnregisterHook();
+            keyCodes = KEY_CODES;
             GlobalKeyboardHook.RegisterHook();
             WriteValuesToSettings();
         }
 
-        public void SetKeyText(string KEY_TEXT) {
+        public void SetKeyText(string KEY_TEXT)
+        {
             keyText = KEY_TEXT;
             WriteValuesToSettings();
         }
@@ -116,11 +124,13 @@ namespace Toggle_Muter {
 
         #region Getters
 
-        public int GetKeyCode() {
-            return keyCode;
+        public int[] GetKeyCodes()
+        {
+            return keyCodes ?? new int[0];
         }
 
-        public string GetKeyText() {
+        public string GetKeyText()
+        {
             return keyText;
         }
 

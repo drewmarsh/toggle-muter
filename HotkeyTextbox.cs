@@ -1,49 +1,85 @@
-namespace Toggle_Muter
+public class HotkeyTextbox : TextBox
 {
-    public class HotkeyTextbox : TextBox
+    private List<Keys> hotkeys = new List<Keys>();
+    private int[] selectedKeyCodes;
+    private string keyText;
+    private bool isNewKeyPressed = true; // Flag to track if a new key is pressed
+    private Keys lastKeyPressed = Keys.None; // Track the last key pressed
+
+    public HotkeyTextbox(int[] initialKeyCodes, string initialKeyText) : base()
     {
-        private Keys hotkey;
-        private int selectedKeyCode;
-        private string keyText;
+        selectedKeyCodes = initialKeyCodes;
+        keyText = initialKeyText;
+        SetInitialText();
+        TextAlign = HorizontalAlignment.Center;
+        KeyDown += HotkeyTextbox_KeyDown;
+        KeyUp += HotkeyTextbox_KeyUp;
+    }
 
-        public Keys Hotkey {
-            get { return hotkey; }
+    private void HotkeyTextbox_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (sender == null || e == null) { return; }
+
+        e.SuppressKeyPress = true;
+
+        Keys key = (Keys)char.ToUpper((char)e.KeyCode);
+
+        // Ignore repeated events for the same key while it's held down
+        if (!isNewKeyPressed && key == lastKeyPressed)
+        {
+            return;
         }
 
-        public HotkeyTextbox(int initialKeyCode, string initialKeyText) : base() {
-            selectedKeyCode = initialKeyCode;
-            keyText = initialKeyText;
-            SetInitialText();
-            TextAlign = HorizontalAlignment.Center; // Center align the textbox
-            KeyDown += HotkeyTextbox_KeyDown;
+        if (isNewKeyPressed)
+        {
+            // Clear the hotkeys list if a new key is pressed
+            hotkeys.Clear();
+            isNewKeyPressed = false;
         }
 
-        private void HotkeyTextbox_KeyDown(object sender, KeyEventArgs e) {
-            if (sender == null || e == null) { return; } // Handle the case when sender or e is null
+        // Add the newly pressed key
+        hotkeys.Add(key);
+        lastKeyPressed = key;
+        UpdateHotkeyText();
+    }
 
-            e.SuppressKeyPress = true; // Suppress the key press to prevent text input
+    private void HotkeyTextbox_KeyUp(object sender, KeyEventArgs e)
+    {
+        if (sender == null || e == null) { return; }
 
-            hotkey = (Keys)char.ToUpper((char)e.KeyCode); // Translate the character to Keys value
-            selectedKeyCode = (int)hotkey; // Store the selected value
-            UpdateHotkeyText();
+        e.SuppressKeyPress = true;
+
+        // Set the flag to indicate that a new key can be pressed
+        isNewKeyPressed = true;
+        lastKeyPressed = Keys.None;
+    }
+
+
+    private void UpdateHotkeyText()
+    {
+        Text = string.Join(" + ", hotkeys.Select(k => k.ToString()));
+    }
+
+    public void SetInitialText()
+    {
+        hotkeys.Clear();
+        if (selectedKeyCodes != null)
+        {
+            foreach (int keyCode in selectedKeyCodes)
+            {
+                hotkeys.Add((Keys)keyCode);
+            }
         }
+        UpdateHotkeyText();
+    }
 
-        
-        // Set the initial textbox text to the saved value 
-        public void SetInitialText() {
-            Text = keyText;
-        }
+    public int[] GetSelectedKeyCodes()
+    {
+        return hotkeys.Select(k => (int)k).ToArray();
+    }
 
-        private void UpdateHotkeyText() {
-            Text = hotkey.ToString();
-        }
-
-        public int GetSelectedKeyCode() {
-            return selectedKeyCode;
-        }
-
-        public string GetTextboxText() {
-            return Text;
-        }
+    public string GetTextboxText()
+    {
+        return Text;
     }
 }

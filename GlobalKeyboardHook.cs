@@ -14,6 +14,7 @@ namespace Toggle_Muter {
         private static Form _form;
         private static SettingsManager _settingsManager;
 
+
         public delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
         public GlobalKeyboardHook(Form form, SettingsManager settingsManager)
@@ -66,18 +67,23 @@ namespace Toggle_Muter {
 
         private static void CheckForDesiredKeyCombination()
         {
-            Keys desiredKey = GetDesiredKeyCombination();
+            if (_form == null || _settingsManager == null)
+            {
+                return;
+            }
 
-            if (_pressedKeys.Length == 1 && _pressedKeys[0] == desiredKey)
+            int[] desiredKeyCodes = GetDesiredKeyCombination();
+
+            if (_pressedKeys.Length == desiredKeyCodes.Length && _pressedKeys.All(k => desiredKeyCodes.Contains((int)k)))
             {
                 _form.AdjustMuteStatus();
                 _pressedKeys = new Keys[0]; // Reset _pressedKeys after handling the desired combination
             }
         }
 
-        private static Keys GetDesiredKeyCombination()
+        private static int[] GetDesiredKeyCombination()
         {
-            return (Keys)_settingsManager.GetKeyCode();
+            return _settingsManager == null ? new int[0] : _settingsManager.GetKeyCodes();
         }
 
         public static void RegisterHook()
