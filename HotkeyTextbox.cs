@@ -43,6 +43,7 @@ public class HotkeyTextbox : TextBox
         UpdateHotkeyText();
     }
 
+
     private void HotkeyTextbox_KeyUp(object sender, KeyEventArgs e)
     {
         if (sender == null || e == null) { return; }

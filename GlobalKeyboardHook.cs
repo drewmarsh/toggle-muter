@@ -56,12 +56,14 @@ namespace Toggle_Muter {
         {
             if (isPressed)
             {
-                _pressedKeys = new[] { key };
+                // Add the new key to the _pressedKeys array
+                _pressedKeys = _pressedKeys.Append(key).ToArray();
                 CheckForDesiredKeyCombination();
             }
             else
             {
-                _pressedKeys = new Keys[0];
+                // Remove the released key from the _pressedKeys array
+                _pressedKeys = _pressedKeys.Where(k => k != key).ToArray();
             }
         }
 
@@ -74,7 +76,7 @@ namespace Toggle_Muter {
 
             int[] desiredKeyCodes = GetDesiredKeyCombination();
 
-            if (_pressedKeys.Length == desiredKeyCodes.Length && _pressedKeys.All(k => desiredKeyCodes.Contains((int)k)))
+            if (_pressedKeys.Length == desiredKeyCodes.Length && desiredKeyCodes.All(k => _pressedKeys.Contains((Keys)k)))
             {
                 _form.AdjustMuteStatus();
                 _pressedKeys = new Keys[0]; // Reset _pressedKeys after handling the desired combination
