@@ -38,15 +38,12 @@ namespace Toggle_Muter {
 
         private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            if (nCode >= 0 && wParam == (IntPtr)0x0100) // WM_KEYDOWN
+            if (nCode >= 0)
             {
                 Keys key = (Keys)Marshal.ReadInt32(lParam);
-                HandleKeyPress(key, true);
-            }
-            else if (nCode >= 0 && wParam == (IntPtr)0x0101) // WM_KEYUP
-            {
-                Keys key = (Keys)Marshal.ReadInt32(lParam);
-                HandleKeyPress(key, false);
+                bool isPressed = (wParam == (IntPtr)0x0100); // WM_KEYDOWN
+
+                HandleKeyPress(key, isPressed);
             }
 
             return CallNextHookEx(_hookID, nCode, wParam, lParam);
@@ -54,16 +51,42 @@ namespace Toggle_Muter {
 
         private static void HandleKeyPress(Keys key, bool isPressed)
         {
+            // Convert left/right modifiers to their base modifier keys
+            key = NormalizeModifierKey(key);
+
             if (isPressed)
             {
-                // Add the new key to the _pressedKeys array
+                // Add the pressed key to the _pressedKeys array
                 _pressedKeys = _pressedKeys.Append(key).ToArray();
-                CheckForDesiredKeyCombination();
             }
             else
             {
                 // Remove the released key from the _pressedKeys array
                 _pressedKeys = _pressedKeys.Where(k => k != key).ToArray();
+            }
+
+            Console.WriteLine($"Current pressed keys: {string.Join(", ", _pressedKeys)}");
+            CheckForDesiredKeyCombination();
+        }
+
+        private static Keys NormalizeModifierKey(Keys key)
+        {
+            switch (key)
+            {
+                case Keys.LControlKey:
+                case Keys.RControlKey:
+                    return Keys.ControlKey;
+                case Keys.LShiftKey:
+                case Keys.RShiftKey:
+                    return Keys.ShiftKey;
+                case Keys.LMenu:
+                case Keys.RMenu:
+                    return Keys.Menu;
+                case Keys.LWin:
+                case Keys.RWin:
+                    return Keys.LWin;
+                default:
+                    return key;
             }
         }
 
@@ -75,11 +98,18 @@ namespace Toggle_Muter {
             }
 
             int[] desiredKeyCodes = GetDesiredKeyCombination();
+            Keys[] desiredKeys = desiredKeyCodes.Select(k => (Keys)k).ToArray();
+            Console.WriteLine($"Desired key combination: {string.Join(", ", desiredKeys)}");
 
-            if (_pressedKeys.Length == desiredKeyCodes.Length && desiredKeyCodes.All(k => _pressedKeys.Contains((Keys)k)))
+            if (_pressedKeys.Length == desiredKeys.Length && _pressedKeys.All(desiredKeys.Contains))
             {
+                Console.WriteLine("Desired key combination matched!");
                 _form.AdjustMuteStatus();
                 _pressedKeys = new Keys[0]; // Reset _pressedKeys after handling the desired combination
+            }
+            else
+            {
+                Console.WriteLine("Desired key combination not matched.");
             }
         }
 
