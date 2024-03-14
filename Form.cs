@@ -98,14 +98,22 @@ namespace Toggle_Muter {
         #region Context Menu Event Handlers
 
         // Event handler for the "Configure Hotkey..." menu item
-        private void MenuConfigureHotkey_Click(object? sender, EventArgs e) {
-                if (configureHotkeyForm == null || configureHotkeyForm.IsDisposed) {
-                    configureHotkeyForm = new ConfigureHotkeyForm(settingsManager);
-                    configureHotkeyForm.Show();
-                }
-                else {
-                    configureHotkeyForm.Focus();
-                }
+        private void MenuConfigureHotkey_Click(object? sender, EventArgs e)
+        {
+            if (configureHotkeyForm == null || configureHotkeyForm.IsDisposed)
+            {
+                // Dispose of the old instance if it exists
+                configureHotkeyForm?.Dispose();
+
+                // Create a new instance
+                configureHotkeyForm = new ConfigureHotkeyForm(settingsManager);
+                configureHotkeyForm.Show();
+            }
+            else
+            {
+                // Bring the existing instance to the foreground
+                configureHotkeyForm.Focus();
+            }
         }
 
        // Event handler for the "Monochromatic Icon" menu item
@@ -130,6 +138,7 @@ namespace Toggle_Muter {
         // Event handler for the "Exit" menu item
         private void MenuExit_Click(object? sender, EventArgs e) {
             Close();
+            configureHotkeyForm?.Dispose();
         }
 
         #endregion

@@ -11,6 +11,7 @@ public class HotkeyTextbox : TextBox
     private string keyText;
     private bool isNewKeyPressed = true; // Flag to track if a new key is pressed
     private Keys lastKeyPressed = Keys.None; // Track the last key pressed
+    public event EventHandler WidthChanged;
 
     public HotkeyTextbox(int[] initialKeyCodes, string initialKeyText) : base()
     {
@@ -60,6 +61,7 @@ public class HotkeyTextbox : TextBox
         lastKeyPressed = Keys.None;
     }
 
+    
     private void UpdateHotkeyText()
     {
         Text = string.Join(" + ", hotkeys.Select(k => k.ToString()));
@@ -72,9 +74,18 @@ public class HotkeyTextbox : TextBox
         {
             int textWidth = (int)g.MeasureString(Text, Font).Width + Padding.Horizontal;
             int newWidth = Math.Min(Math.Max(textWidth, MinWidth), MaxWidth);
-            Width = newWidth;
+            if (Width != newWidth)
+            {
+                Width = newWidth;
+                OnWidthChanged(EventArgs.Empty);
+            }
         }
-}
+    }
+
+    protected virtual void OnWidthChanged(EventArgs e)
+    {
+        WidthChanged?.Invoke(this, e);
+    }
 
     public void SetInitialText()
     {
@@ -87,6 +98,7 @@ public class HotkeyTextbox : TextBox
             }
         }
         UpdateHotkeyText();
+        AdjustWidth(); // Adjust width based on initial text
     }
 
     public int[] GetSelectedKeyCodes()
