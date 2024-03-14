@@ -3,6 +3,8 @@ namespace Toggle_Muter {
         private HotkeyTextbox hotkeyTextbox;
         private SettingsManager settingsManager;
         private const int ButtonSpacing = 10;
+        private Button confirmButton;
+        private Button closeButton;
         
         public ConfigureHotkeyForm(SettingsManager settingsManager) {
             InitializeComponent();
@@ -10,7 +12,7 @@ namespace Toggle_Muter {
             ShowHotkeyConfig();
 
             // Add the "Confirm" button on the left
-            Button confirmButton = new Button {
+            confirmButton = new Button {
                 Text = "Confirm",
                 FlatStyle = FlatStyle.System
             };
@@ -19,7 +21,7 @@ namespace Toggle_Muter {
             Controls.Add(confirmButton);
 
             // Add the "Close" button on the right
-            Button closeButton = new Button {
+            closeButton = new Button {
                 Text = "Close",
                 FlatStyle = FlatStyle.System
             };
@@ -28,14 +30,17 @@ namespace Toggle_Muter {
             Controls.Add(closeButton);
 
             // Create and configure the HotkeyTextbox control
-            hotkeyTextbox = new HotkeyTextbox(settingsManager.GetKeyCodes(), settingsManager.GetKeyText());
+            hotkeyTextbox = new HotkeyTextbox(settingsManager.GetKeyCodes(), settingsManager.GetKeyText(), this);
             hotkeyTextbox.WidthChanged += HotkeyTextbox_WidthChanged;
             CenterHotkeyTextbox();
             Controls.Add(hotkeyTextbox);
 
+            // Handle the form's Activated and Deactivate events
+            Activated += ConfigureHotkeyForm_Activated;
+            Deactivate += ConfigureHotkeyForm_Deactivated;
+
             FormBorderStyle = FormBorderStyle.FixedToolWindow;
         }
-
 
         private void InitializeComponent() {
             this.SuspendLayout();
@@ -72,6 +77,24 @@ namespace Toggle_Muter {
 
         private void CenterHotkeyTextbox() {
             hotkeyTextbox.Location = new Point((ClientSize.Width - hotkeyTextbox.Width) / 2, 19);
+        }
+
+        private void ConfigureHotkeyForm_Activated(object sender, EventArgs e) {
+            // Enable the Confirm and Close buttons when the form is activated
+            confirmButton.Enabled = true;
+            closeButton.Enabled = true;
+
+            // Show the text inside the hotkeyTextbox
+            hotkeyTextbox.ForeColor = Color.Black;
+        }
+
+        private void ConfigureHotkeyForm_Deactivated(object sender, EventArgs e) {
+            // Disable the Confirm and Close buttons when the form loses focus
+            confirmButton.Enabled = false;
+            closeButton.Enabled = false;
+
+            // Hide the text inside the hotkeyTextbox
+            hotkeyTextbox.ForeColor = hotkeyTextbox.BackColor;
         }
     }
 }

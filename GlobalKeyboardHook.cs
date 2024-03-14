@@ -118,15 +118,25 @@ namespace Toggle_Muter {
 
         public static void RegisterHook()
         {
-            _proc = HookCallback;
-            using (Process currentProcess = Process.GetCurrentProcess())
-            using (ProcessModule currentModule = currentProcess.MainModule)
+            try
             {
-                _hookID = SetWindowsHookEx(13, _proc, GetModuleHandle(currentModule.ModuleName), 0);
+                int[] keyCodes = _settingsManager.GetKeyCodes();
+                if (keyCodes.Length == 0) { return; }
+
+                _proc = HookCallback;
+                using (Process currentProcess = Process.GetCurrentProcess())
+                using (ProcessModule currentModule = currentProcess.MainModule)
+                {
+                    _hookID = SetWindowsHookEx(13, _proc, GetModuleHandle(currentModule.ModuleName), 0);
+                }
+                Console.WriteLine("Hook registered");
+                Console.Write("Keycode(s): '" + string.Join(", ", _settingsManager.GetKeyCodes()) + "'");
+                Console.WriteLine(", Hotkey: '" + _settingsManager.GetKeyText() + "'");
             }
-            Console.WriteLine("Hook registered");
-            Console.Write("Keycode(s): '"+ string.Join(", ", _settingsManager.GetKeyCodes()) + "'");
-            Console.WriteLine(", Hotkey: '" + _settingsManager.GetKeyText() + "'");
+            catch (Exception ex)
+            {
+                Console.WriteLine("An error occurred: " + ex.Message);
+            }
         }
 
         public static void UnregisterHook()

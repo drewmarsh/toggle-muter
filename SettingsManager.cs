@@ -5,8 +5,8 @@ namespace Toggle_Muter {
         private Form mainForm;
         private GlobalKeyboardHook keyboardHook;
         private const bool DEFAULT_MONOCHROMATIC_SYS_TRAY_ICON = true; // Default system tray icon style is monochromatic
-        private static readonly int[] DEFAULT_KEY_CODES = { 42 }; // Default hotkey is set to the virtual keycode for 'B'
-        private const string DEFAULT_KEY_TEXT = "B"; // Default text representation of the hotkey is set to 'B'
+        private static readonly int[] DEFAULT_KEY_CODES = { 17, 81 }; // Default hotkey is set to 'CTRL + Q'
+        private const string DEFAULT_KEY_TEXT = "CTRL + Q"; // Default text representation of the hotkey is set to 'CTRL + Q'
          private int[] keyCodes;
         private string keyText;
         private bool monochromaticSysTrayIcon;

@@ -1,7 +1,7 @@
 using System.Drawing;
 using System.Windows.Forms;
 using System.Linq;
-
+namespace Toggle_Muter {
 public class HotkeyTextbox : TextBox
 {
     private const int MaxWidth = 200;
@@ -12,15 +12,18 @@ public class HotkeyTextbox : TextBox
     private bool isNewKeyPressed = true; // Flag to track if a new key is pressed
     private Keys lastKeyPressed = Keys.None; // Track the last key pressed
     public event EventHandler WidthChanged;
+    private ConfigureHotkeyForm _configureHotkeyForm;
 
-    public HotkeyTextbox(int[] initialKeyCodes, string initialKeyText) : base()
+    public HotkeyTextbox(int[] initialKeyCodes, string initialKeyText, ConfigureHotkeyForm configureHotkeyForm) : base()
     {
         selectedKeyCodes = initialKeyCodes;
         keyText = initialKeyText;
+        _configureHotkeyForm = configureHotkeyForm;
         SetInitialText();
         TextAlign = HorizontalAlignment.Center;
         KeyDown += HotkeyTextbox_KeyDown;
         KeyUp += HotkeyTextbox_KeyUp;
+        GotFocus += HotkeyTextbox_GotFocus;
     }
 
     private void HotkeyTextbox_KeyDown(object sender, KeyEventArgs e)
@@ -110,4 +113,13 @@ public class HotkeyTextbox : TextBox
     {
         return Text;
     }
+
+    private void HotkeyTextbox_GotFocus(object sender, EventArgs e)
+    {
+        Text = string.Empty;
+        hotkeys.Clear();
+        lastKeyPressed = Keys.None;
+        isNewKeyPressed = true;
+    }
+}
 }
