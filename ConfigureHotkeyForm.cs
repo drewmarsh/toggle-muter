@@ -29,7 +29,6 @@ namespace Toggle_Muter {
 
             // Create and configure the HotkeyTextbox control
             hotkeyTextbox = new HotkeyTextbox(settingsManager.GetKeyCodes(), settingsManager.GetKeyText());
-            hotkeyTextbox.TextChanged += HotkeyTextbox_TextChanged;
             hotkeyTextbox.WidthChanged += HotkeyTextbox_WidthChanged;
             CenterHotkeyTextbox();
             Controls.Add(hotkeyTextbox);
@@ -60,16 +59,11 @@ namespace Toggle_Muter {
         }
 
         private void ConfirmButton_Click(object? sender, EventArgs e) {
-            settingsManager.SetKeyCodes(hotkeyTextbox.GetSelectedKeyCodes());
-            settingsManager.SetKeyText(hotkeyTextbox.GetTextboxText());
+            settingsManager.SetKeyCodesAndText(hotkeyTextbox.GetSelectedKeyCodes(), hotkeyTextbox.GetTextboxText());
         }
 
         private void CloseButton_Click(object? sender, EventArgs e) {
             Close();
-        }
-
-        private void HotkeyTextbox_TextChanged(object sender, EventArgs e) {
-            // Do nothing, text changes no longer affect centering
         }
 
         private void HotkeyTextbox_WidthChanged(object sender, EventArgs e) {

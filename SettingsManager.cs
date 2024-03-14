@@ -41,11 +41,9 @@ namespace Toggle_Muter {
                         {
                             case "KeyCodes":
                                 keyCodes = value.Split(',').Select(int.Parse).ToArray();
-                                Console.WriteLine("Keycode(s): '"+ string.Join(",", keyCodes) + "'");
                                 break;
                             case "KeyText":
                                 keyText = value;
-                                Console.WriteLine("Hotkey is set to: '" + keyText + "'");
                                 break;
                             case "MonochromaticSysTrayIcon":
                                 monochromaticSysTrayIcon = Convert.ToBoolean(value);
@@ -72,8 +70,7 @@ namespace Toggle_Muter {
                         sw.WriteLine($"MonochromaticSysTrayIcon={monochromaticSysTrayIcon}");
                 }
 
-                SetKeyCodes(keyCodes);
-                SetKeyText(keyText);
+                SetKeyCodesAndText(keyCodes, keyText);
                 SetMonochromaticSysTrayIcon(monochromaticSysTrayIcon);
 
                 Console.WriteLine($"Error reading settings.ini, reading default settings instead: {ex.Message}");
@@ -101,17 +98,12 @@ namespace Toggle_Muter {
 
         #region Setters
 
-        public void SetKeyCodes(int[] KEY_CODES)
+        public void SetKeyCodesAndText(int[] KEY_CODES, string KEY_TEXT)
         {
             GlobalKeyboardHook.UnregisterHook();
             keyCodes = KEY_CODES;
-            GlobalKeyboardHook.RegisterHook();
-            WriteValuesToSettings();
-        }
-
-        public void SetKeyText(string KEY_TEXT)
-        {
             keyText = KEY_TEXT;
+            GlobalKeyboardHook.RegisterHook();
             WriteValuesToSettings();
         }
 
