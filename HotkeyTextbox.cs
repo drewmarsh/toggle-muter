@@ -1,6 +1,12 @@
+using System.Drawing;
+using System.Windows.Forms;
+using System.Linq;
+
 public class HotkeyTextbox : TextBox
 {
-    private List<Keys> hotkeys = new List<Keys>();
+    private const int MaxWidth = 200;
+    private const int MinWidth = 100;
+    private readonly List<Keys> hotkeys = new List<Keys>();
     private int[] selectedKeyCodes;
     private string keyText;
     private bool isNewKeyPressed = true; // Flag to track if a new key is pressed
@@ -43,7 +49,6 @@ public class HotkeyTextbox : TextBox
         UpdateHotkeyText();
     }
 
-
     private void HotkeyTextbox_KeyUp(object sender, KeyEventArgs e)
     {
         if (sender == null || e == null) { return; }
@@ -55,11 +60,21 @@ public class HotkeyTextbox : TextBox
         lastKeyPressed = Keys.None;
     }
 
-
     private void UpdateHotkeyText()
     {
         Text = string.Join(" + ", hotkeys.Select(k => k.ToString()));
+        AdjustWidth();
     }
+
+    private void AdjustWidth()
+    {
+        using (Graphics g = CreateGraphics())
+        {
+            int textWidth = (int)g.MeasureString(Text, Font).Width + Padding.Horizontal;
+            int newWidth = Math.Min(Math.Max(textWidth, MinWidth), MaxWidth);
+            Width = newWidth;
+        }
+}
 
     public void SetInitialText()
     {

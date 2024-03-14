@@ -8,13 +8,6 @@ namespace Toggle_Muter {
             this.settingsManager = settingsManager;
             ShowHotkeyConfig();
 
-            // Create and configure the HotkeyTextbox control
-            hotkeyTextbox = new HotkeyTextbox(settingsManager.GetKeyCodes(), settingsManager.GetKeyText()) {
-                Location = new Point(112, 19),
-                Width = 76
-            };
-            Controls.Add(hotkeyTextbox);
-
             // Add the "Confirm" button on the left
             Button confirmButton = new Button {
                 Text = "Confirm",
@@ -33,6 +26,14 @@ namespace Toggle_Muter {
             closeButton.Click += CloseButton_Click;
             closeButton.Location = new Point(163, 60);
             Controls.Add(closeButton);
+
+            // Create and configure the HotkeyTextbox control
+            hotkeyTextbox = new HotkeyTextbox(settingsManager.GetKeyCodes(), settingsManager.GetKeyText()) {
+                Location = new Point(112, 19),
+                Width = 76,
+                TabStop = false // Prevent the TextBox from highlighting on ConfigureHotkeyForm initialization
+            };
+            Controls.Add(hotkeyTextbox);
 
             FormBorderStyle = FormBorderStyle.FixedToolWindow;
         }
