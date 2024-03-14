@@ -125,7 +125,7 @@ namespace Toggle_Muter {
                 _hookID = SetWindowsHookEx(13, _proc, GetModuleHandle(currentModule.ModuleName), 0);
             }
             Console.WriteLine("Hook registered");
-            Console.Write("Keycode(s): '"+ string.Join(",", _settingsManager.GetKeyCodes()) + "'");
+            Console.Write("Keycode(s): '"+ string.Join(", ", _settingsManager.GetKeyCodes()) + "'");
             Console.WriteLine(", Hotkey: '" + _settingsManager.GetKeyText() + "'");
         }
 
