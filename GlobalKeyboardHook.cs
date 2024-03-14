@@ -10,11 +10,9 @@ namespace Toggle_Muter {
     {
         private static LowLevelKeyboardProc _proc;
         private static IntPtr _hookID = IntPtr.Zero;
-        private static Keys[] _pressedKeys = new Keys[0];
+        private static Dictionary<Keys, bool> _keyStates = new Dictionary<Keys, bool>();
         private static Form _form;
         private static SettingsManager _settingsManager;
-
-
         public delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
         public GlobalKeyboardHook(Form form, SettingsManager settingsManager)
@@ -54,19 +52,47 @@ namespace Toggle_Muter {
             // Convert left/right modifiers to their base modifier keys
             key = NormalizeModifierKey(key);
 
+            // Update the key state in the dictionary
             if (isPressed)
             {
-                // Add the pressed key to the _pressedKeys array
-                _pressedKeys = _pressedKeys.Append(key).ToArray();
+                _keyStates[key] = true;
             }
             else
             {
-                // Remove the released key from the _pressedKeys array
-                _pressedKeys = _pressedKeys.Where(k => k != key).ToArray();
+                _keyStates[key] = false;
             }
 
-            Console.WriteLine($"Current pressed keys: {string.Join(", ", _pressedKeys)}");
             CheckForDesiredKeyCombination();
+        }
+
+        private static void CheckForDesiredKeyCombination()
+        {
+            if (_form == null || _settingsManager == null)
+            {
+                return;
+            }
+
+            int[] desiredKeyCodes = GetDesiredKeyCombination();
+            Keys[] desiredKeys = desiredKeyCodes.Select(k => (Keys)k).ToArray();
+
+            // Check if all desired keys are pressed simultaneously
+            bool allDesiredKeysPressed = desiredKeys.All(key => _keyStates.ContainsKey(key) && _keyStates[key]);
+
+            if (allDesiredKeysPressed)
+            {
+                Console.WriteLine($"Desired key combination ({string.Join(", ", desiredKeys)}) has been pressed!");
+                _form.AdjustMuteStatus();
+
+                // Reset the key states after handling the desired combination
+                foreach (Keys key in desiredKeys)
+                {
+                    _keyStates[key] = false;
+                }
+            }
+        }
+        private static int[] GetDesiredKeyCombination()
+        {
+            return _settingsManager == null ? new int[0] : _settingsManager.GetKeyCodes();
         }
 
         private static Keys NormalizeModifierKey(Keys key)
@@ -81,6 +107,7 @@ namespace Toggle_Muter {
                     return Keys.ShiftKey;
                 case Keys.LMenu:
                 case Keys.RMenu:
+                    Console.WriteLine("Alt detected!");
                     return Keys.Menu;
                 case Keys.LWin:
                 case Keys.RWin:
@@ -88,34 +115,6 @@ namespace Toggle_Muter {
                 default:
                     return key;
             }
-        }
-
-        private static void CheckForDesiredKeyCombination()
-        {
-            if (_form == null || _settingsManager == null)
-            {
-                return;
-            }
-
-            int[] desiredKeyCodes = GetDesiredKeyCombination();
-            Keys[] desiredKeys = desiredKeyCodes.Select(k => (Keys)k).ToArray();
-            Console.WriteLine($"Desired key combination: {string.Join(", ", desiredKeys)}");
-
-            if (_pressedKeys.Length == desiredKeys.Length && _pressedKeys.All(desiredKeys.Contains))
-            {
-                Console.WriteLine("Desired key combination matched!");
-                _form.AdjustMuteStatus();
-                _pressedKeys = new Keys[0]; // Reset _pressedKeys after handling the desired combination
-            }
-            else
-            {
-                Console.WriteLine("Desired key combination not matched.");
-            }
-        }
-
-        private static int[] GetDesiredKeyCombination()
-        {
-            return _settingsManager == null ? new int[0] : _settingsManager.GetKeyCodes();
         }
 
         public static void RegisterHook()
