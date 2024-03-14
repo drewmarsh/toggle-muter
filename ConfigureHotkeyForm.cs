@@ -14,7 +14,8 @@ namespace Toggle_Muter {
             // Add the "Confirm" button on the left
             confirmButton = new Button {
                 Text = "Confirm",
-                FlatStyle = FlatStyle.System
+                FlatStyle = FlatStyle.System,
+                TabStop = false
             };
             confirmButton.Click += ConfirmButton_Click;
             confirmButton.Location = new Point(ClientSize.Width / 2 - confirmButton.Width - ButtonSpacing, 60);
@@ -23,14 +24,18 @@ namespace Toggle_Muter {
             // Add the "Close" button on the right
             closeButton = new Button {
                 Text = "Close",
-                FlatStyle = FlatStyle.System
+                FlatStyle = FlatStyle.System,
+                TabStop = false
             };
             closeButton.Click += CloseButton_Click;
             closeButton.Location = new Point(ClientSize.Width / 2 + ButtonSpacing, 60);
             Controls.Add(closeButton);
 
             // Create and configure the HotkeyTextbox control
-            hotkeyTextbox = new HotkeyTextbox(settingsManager.GetKeyCodes(), settingsManager.GetKeyText(), this);
+            hotkeyTextbox = new HotkeyTextbox(settingsManager.GetKeyCodes(), settingsManager.GetKeyText(), this, settingsManager)
+            {
+                TabStop = false
+            };
             hotkeyTextbox.WidthChanged += HotkeyTextbox_WidthChanged;
             CenterHotkeyTextbox();
             Controls.Add(hotkeyTextbox);
@@ -65,6 +70,8 @@ namespace Toggle_Muter {
 
         private void ConfirmButton_Click(object? sender, EventArgs e) {
             settingsManager.SetKeyCodesAndText(hotkeyTextbox.GetSelectedKeyCodes(), hotkeyTextbox.GetTextboxText());
+            hotkeyTextbox.UpdateHotkeyText();
+            hotkeyTextbox.ForeColor = Color.Black;
         }
 
         private void CloseButton_Click(object? sender, EventArgs e) {
@@ -83,18 +90,12 @@ namespace Toggle_Muter {
             // Enable the Confirm and Close buttons when the form is activated
             confirmButton.Enabled = true;
             closeButton.Enabled = true;
-
-            // Show the text inside the hotkeyTextbox
-            hotkeyTextbox.ForeColor = Color.Black;
         }
 
         private void ConfigureHotkeyForm_Deactivated(object sender, EventArgs e) {
             // Disable the Confirm and Close buttons when the form loses focus
             confirmButton.Enabled = false;
             closeButton.Enabled = false;
-
-            // Hide the text inside the hotkeyTextbox
-            hotkeyTextbox.ForeColor = hotkeyTextbox.BackColor;
         }
     }
 }

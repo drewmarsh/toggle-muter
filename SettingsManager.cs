@@ -5,8 +5,8 @@ namespace Toggle_Muter {
         private Form mainForm;
         private GlobalKeyboardHook keyboardHook;
         private const bool DEFAULT_MONOCHROMATIC_SYS_TRAY_ICON = true; // Default system tray icon style is monochromatic
-        private static readonly int[] DEFAULT_KEY_CODES = { 17, 81 }; // Default hotkey is set to 'CTRL + Q'
-        private const string DEFAULT_KEY_TEXT = "CTRL + Q"; // Default text representation of the hotkey is set to 'CTRL + Q'
+        private static readonly int[] UNBOUND_KEY_CODES = {};
+        private const string UNBOUND_KEY_TEXT = "";
          private int[] keyCodes;
         private string keyText;
         private bool monochromaticSysTrayIcon;
@@ -54,8 +54,8 @@ namespace Toggle_Muter {
             }
             catch (Exception ex) {
                 // Handle exception for when the settings.ini file is not found
-                keyCodes = DEFAULT_KEY_CODES;
-                keyText = DEFAULT_KEY_TEXT;
+                keyCodes = UNBOUND_KEY_CODES;
+                keyText = UNBOUND_KEY_TEXT;
                 monochromaticSysTrayIcon = DEFAULT_MONOCHROMATIC_SYS_TRAY_ICON;
 
                 // Check if the settings.ini file already exists
