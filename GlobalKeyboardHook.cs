@@ -1,18 +1,16 @@
-using System;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
 
-namespace Toggle_Muter {
-
+namespace Toggle_Muter
+{
     public class GlobalKeyboardHook
     {
-        private static LowLevelKeyboardProc _proc;
-        private static IntPtr _hookID = IntPtr.Zero;
+        private static LowLevelKeyboardProc? _hookCallback;
+        private static IntPtr _hookId = IntPtr.Zero;
         private static Dictionary<Keys, bool> _keyStates = new Dictionary<Keys, bool>();
-        private static Form _form;
-        private static SettingsManager _settingsManager;
+        private static Form? _form;
+        private static SettingsManager? _settingsManager;
+
         public delegate IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam);
 
         public GlobalKeyboardHook(Form form, SettingsManager settingsManager)
@@ -21,46 +19,53 @@ namespace Toggle_Muter {
             _settingsManager = settingsManager;
         }
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
+        // Register the global keyboard hook
+        public static void RegisterHook()
+        {
+            int[] keyCodes = _settingsManager?.GetKeyCodes() ?? Array.Empty<int>();
+            if (keyCodes.Length == 0)
+            {
+                return;
+            }
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+            _hookCallback = HookCallback;
+            using (Process currentProcess = Process.GetCurrentProcess())
+            using (ProcessModule currentModule = currentProcess.MainModule!)
+            {
+                _hookId = SetWindowsHookEx(WH_KEYBOARD_LL, _hookCallback!, GetModuleHandle(currentModule.ModuleName), 0);
+            }
+            Debug.WriteLine("Hook registered");
+            Debug.WriteLine($"Keycode(s): '{string.Join(", ", _settingsManager?.GetKeyCodes() ?? Array.Empty<int>())}'");
+            Debug.WriteLine($"Hotkey: '{_settingsManager?.GetKeyText() ?? ""}'");
+        }
 
-        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
-
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        private static extern IntPtr GetModuleHandle(string lpModuleName);
+        // Unregister the global keyboard hook
+        public static void UnregisterHook()
+        {
+            UnhookWindowsHookEx(_hookId);
+            Debug.WriteLine("Hook unregistered");
+        }
 
         private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
             if (nCode >= 0)
             {
                 Keys key = (Keys)Marshal.ReadInt32(lParam);
-                bool isPressed = (wParam == (IntPtr)0x0100); // WM_KEYDOWN
+                bool isKeyDown = (wParam == (IntPtr)WM_KEYDOWN);
 
-                HandleKeyPress(key, isPressed);
+                HandleKeyPress(key, isKeyDown);
             }
 
-            return CallNextHookEx(_hookID, nCode, wParam, lParam);
+            return CallNextHookEx(_hookId, nCode, wParam, lParam);
         }
 
-        private static void HandleKeyPress(Keys key, bool isPressed)
+        private static void HandleKeyPress(Keys key, bool isKeyDown)
         {
             // Convert left/right modifiers to their base modifier keys
             key = NormalizeModifierKey(key);
 
             // Update the key state in the dictionary
-            if (isPressed)
-            {
-                _keyStates[key] = true;
-            }
-            else
-            {
-                _keyStates[key] = false;
-            }
+            _keyStates[key] = isKeyDown;
 
             CheckForDesiredKeyCombination();
         }
@@ -72,15 +77,14 @@ namespace Toggle_Muter {
                 return;
             }
 
-            int[] desiredKeyCodes = GetDesiredKeyCombination();
-            Keys[] desiredKeys = desiredKeyCodes.Select(k => (Keys)k).ToArray();
+            Keys[] desiredKeys = _settingsManager.GetKeyCodes().Select(k => (Keys)k).ToArray();
 
             // Check if all desired keys are pressed simultaneously
             bool allDesiredKeysPressed = desiredKeys.All(key => _keyStates.ContainsKey(key) && _keyStates[key]);
 
             if (allDesiredKeysPressed)
             {
-                Console.WriteLine($"Desired key combination ({string.Join(", ", desiredKeys)}) has been pressed!");
+                Debug.WriteLine($"Desired key combination ({string.Join(", ", desiredKeys)}) has been pressed!");
                 _form.AdjustMuteStatus();
 
                 // Reset the key states after handling the desired combination
@@ -89,10 +93,6 @@ namespace Toggle_Muter {
                     _keyStates[key] = false;
                 }
             }
-        }
-        private static int[] GetDesiredKeyCombination()
-        {
-            return _settingsManager == null ? new int[0] : _settingsManager.GetKeyCodes();
         }
 
         private static Keys NormalizeModifierKey(Keys key)
@@ -116,33 +116,22 @@ namespace Toggle_Muter {
             }
         }
 
-        public static void RegisterHook()
-        {
-            try
-            {
-                int[] keyCodes = _settingsManager.GetKeyCodes();
-                if (keyCodes.Length == 0) { return; }
+        // Import the necessary Win32 API functions
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);
 
-                _proc = HookCallback;
-                using (Process currentProcess = Process.GetCurrentProcess())
-                using (ProcessModule currentModule = currentProcess.MainModule)
-                {
-                    _hookID = SetWindowsHookEx(13, _proc, GetModuleHandle(currentModule.ModuleName), 0);
-                }
-                Console.WriteLine("Hook registered");
-                Console.Write("Keycode(s): '" + string.Join(", ", _settingsManager.GetKeyCodes()) + "'");
-                Console.WriteLine(", Hotkey: '" + _settingsManager.GetKeyText() + "'");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("An error occurred: " + ex.Message);
-            }
-        }
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool UnhookWindowsHookEx(IntPtr hhk);
 
-        public static void UnregisterHook()
-        {
-            UnhookWindowsHookEx(_hookID);
-            Console.WriteLine("Hook unregistered");
-        }
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr GetModuleHandle(string lpModuleName);
+
+        // Constants for Win32 API function parameters
+        private const int WH_KEYBOARD_LL = 13;
+        private const int WM_KEYDOWN = 0x0100;
     }
 }

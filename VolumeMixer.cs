@@ -1,8 +1,8 @@
 using System.Runtime.InteropServices;
 
 namespace Toggle_Muter {
-
-public class VolumeMixer {
+    public class VolumeMixer {
+        // Retrieves the volume level of the specified application
         public static float? GetApplicationVolume(int pid) {
             ISimpleAudioVolume? volume = GetVolumeObject(pid);
             if (volume == null)
@@ -14,6 +14,7 @@ public class VolumeMixer {
             return level * 100f;
         }
 
+        // Retrieves the mute state of the specified application
         public static bool? GetApplicationMute(int pid) {
             ISimpleAudioVolume? volume = GetVolumeObject(pid);
             if (volume == null)
@@ -22,9 +23,10 @@ public class VolumeMixer {
             bool mute;
             volume.GetMute(out mute);
             Marshal.ReleaseComObject(volume);
-            return mute ? (bool?)true : false;
+            return mute;
         }
 
+        // Sets the volume level of the specified application
         public static void SetApplicationVolume(int pid, float level) {
             ISimpleAudioVolume? volume = GetVolumeObject(pid);
             if (volume == null)
@@ -35,6 +37,7 @@ public class VolumeMixer {
             Marshal.ReleaseComObject(volume);
         }
 
+        // Sets the mute state of the specified application
         public static void SetApplicationMute(int pid, bool mute) {
             ISimpleAudioVolume? volume = GetVolumeObject(pid);
             if (volume == null)
@@ -43,28 +46,28 @@ public class VolumeMixer {
             Guid guid = Guid.Empty;
             volume.SetMute(mute, ref guid);
             Marshal.ReleaseComObject(volume);
-
         }
 
+        // Retrieves the volume object for the specified application
         private static ISimpleAudioVolume? GetVolumeObject(int pid) {
-            // get the speakers (1st render + multimedia) device
+            // Get the default multimedia audio endpoint
             IMMDeviceEnumerator deviceEnumerator = (IMMDeviceEnumerator)(new MMDeviceEnumerator());
             IMMDevice speakers;
             deviceEnumerator.GetDefaultAudioEndpoint(EDataFlow.eRender, ERole.eMultimedia, out speakers);
 
-            // activate the session manager. we need the enumerator
+            // Activate the audio session manager
             Guid IID_IAudioSessionManager2 = typeof(IAudioSessionManager2).GUID;
             object o;
             speakers.Activate(ref IID_IAudioSessionManager2, 0, IntPtr.Zero, out o);
             IAudioSessionManager2 mgr = (IAudioSessionManager2)o;
 
-            // enumerate sessions for on this device
+            // Enumerate audio sessions
             IAudioSessionEnumerator sessionEnumerator;
             mgr.GetSessionEnumerator(out sessionEnumerator);
             int count;
             sessionEnumerator.GetCount(out count);
 
-            // search for an audio session with the required name, can use process id or app name (with IAudioSessionControl2)
+            // Find the audio session with the specified process ID
             ISimpleAudioVolume? volumeControl = null;
             for (int i = 0; i < count; i++) {
                 IAudioSessionControl2 ctl;
@@ -78,19 +81,24 @@ public class VolumeMixer {
                 }
                 Marshal.ReleaseComObject(ctl);
             }
+
+            // Clean up COM objects
             Marshal.ReleaseComObject(sessionEnumerator);
             Marshal.ReleaseComObject(mgr);
             Marshal.ReleaseComObject(speakers);
             Marshal.ReleaseComObject(deviceEnumerator);
+
             return volumeControl;
         }
     }
 
+    // COM class for multimedia device enumerator
     [ComImport]
     [Guid("BCDE0395-E52F-467C-8E3D-C4579291692E")]
     internal class MMDeviceEnumerator {
     }
 
+    // Enumeration for audio data flow direction
     internal enum EDataFlow {
         eRender,
         eCapture,
@@ -98,6 +106,7 @@ public class VolumeMixer {
         EDataFlow_enum_count
     }
 
+    // Enumeration for audio endpoint role
     internal enum ERole {
         eConsole,
         eMultimedia,
@@ -105,6 +114,7 @@ public class VolumeMixer {
         ERole_enum_count
     }
 
+    // Interface for multimedia device enumerator
     [Guid("A95664D2-9614-4F35-A746-DE8DB63617E6"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     internal interface IMMDeviceEnumerator {
         int NotImpl1();
@@ -112,17 +122,19 @@ public class VolumeMixer {
         [PreserveSig]
         int GetDefaultAudioEndpoint(EDataFlow dataFlow, ERole role, out IMMDevice ppDevice);
 
-        // the rest is not implemented
+        // The rest is not implemented
     }
 
+    // Interface for multimedia device
     [Guid("D666063F-1587-4E43-81F1-B948E807363F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     internal interface IMMDevice {
         [PreserveSig]
         int Activate(ref Guid iid, int dwClsCtx, IntPtr pActivationParams, [MarshalAs(UnmanagedType.IUnknown)] out object ppInterface);
 
-        // the rest is not implemented
+        // The rest is not implemented
     }
 
+    // Interface for audio session manager
     [Guid("77AA99A0-1BD6-484F-8BC7-2C654C9A9B6F"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     internal interface IAudioSessionManager2 {
         int NotImpl1();
@@ -134,6 +146,7 @@ public class VolumeMixer {
         // the rest is not implemented
     }
 
+    // Interface for audio session enumerator
     [Guid("E2F5BB11-0570-40CA-ACDD-3AA01277DEE8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     internal interface IAudioSessionEnumerator {
         [PreserveSig]
@@ -143,6 +156,7 @@ public class VolumeMixer {
         int GetSession(int SessionCount, out IAudioSessionControl2 Session);
     }
 
+    // Interface for simple audio volume control
     [Guid("87CE5498-68D6-44E5-9215-6DA47EF883D8"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     internal interface ISimpleAudioVolume {
         [PreserveSig]
@@ -158,6 +172,7 @@ public class VolumeMixer {
         int GetMute(out bool pbMute);
     }
 
+    // Interface for audio session control
     [Guid("bfb7ff88-7239-4fc9-8fa2-07c950be9c6d"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
     internal interface IAudioSessionControl2 {
         // IAudioSessionControl

@@ -1,169 +1,191 @@
+using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Windows.Forms;
 using Microsoft.Win32;
 
-namespace Toggle_Muter {
-    public partial class Form : System.Windows.Forms.Form {
-        private readonly NotifyIcon notifyIcon;
-        private GlobalKeyboardHook _keyboardHook;
-        private ConfigureHotkeyForm? configureHotkeyForm;
-        private SettingsManager settingsManager;
+namespace Toggle_Muter
+{
+    public partial class Form : System.Windows.Forms.Form
+    {
+        private readonly NotifyIcon _notifyIcon;
+        private readonly GlobalKeyboardHook _keyboardHook;
+        private readonly SettingsManager _settingsManager;
+        private ConfigureHotkeyForm? _configureHotkeyForm;
 
-        public Form() {
+        public Form()
+        {
             InitializeComponent();
-            settingsManager = new SettingsManager(this, _keyboardHook);
-            _keyboardHook = new GlobalKeyboardHook(this, settingsManager);
-            GlobalKeyboardHook.RegisterHook();
-            
-            configureHotkeyForm = null;
+            _settingsManager = new SettingsManager(this, _keyboardHook);
+            _keyboardHook = new GlobalKeyboardHook(this, _settingsManager);
 
-            notifyIcon = new NotifyIcon {
+            // Register the global keyboard hook
+            GlobalKeyboardHook.RegisterHook();
+
+            // Initialize the system tray icon
+            _notifyIcon = new NotifyIcon
+            {
                 Text = "Toggle Muter",
                 Visible = true,
                 ContextMenuStrip = new ContextMenuStrip()
             };
             LoadSystemTrayIcon();
-
-            // Add Context menu items
-            // "Autostart" menu item (checkbox)
-            var autostartMenuItem = new ToolStripMenuItem("Autostart") {
-                CheckOnClick = true,
-                Checked = IsAppSetToRunAtStartup() // Set it based on current startup behavior
-            };
-            autostartMenuItem.Click += AutostartMenuItem_Click;
-            notifyIcon.ContextMenuStrip.Items.Add(autostartMenuItem);
-            
-            // Separator
-            notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
-            
-            // "Configure hotkey..." menu item (button)
-            notifyIcon.ContextMenuStrip.Items.Add("Configure Hotkey...", null, MenuConfigureHotkey_Click);
-
-            // "Monochromatic Icon" menu item (checkbox)
-            var monochromaticIconMenuItem = new ToolStripMenuItem("Monochromatic Icon") {
-                CheckOnClick = true,
-                Checked = settingsManager.GetMonochromaticSysTrayIcon()  // Set it based on saved setting
-            };
-            monochromaticIconMenuItem.Click += MonochromaticIconMenuItem_Click;
-            notifyIcon.ContextMenuStrip.Items.Add(monochromaticIconMenuItem);
-
-            // Separator
-            notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator()); 
-            
-            // "Exit" menu item (button)
-            notifyIcon.ContextMenuStrip.Items.Add("Exit", null, MenuExit_Click);
+            SetupContextMenu();
 
             // Wire up the Form_Closing event handler
-            Closing += Form_Closing;
+            FormClosing += Form_FormClosing;
         }
 
-        private void Form_Closing(object? sender, CancelEventArgs e)
+        // Set up the context menu for the system tray icon
+        private void SetupContextMenu()
         {
-            GlobalKeyboardHook.UnregisterHook();
+            // "Autostart" menu item (checkbox)
+            var autostartMenuItem = new ToolStripMenuItem("Autostart")
+            {
+                CheckOnClick = true,
+                Checked = IsAppSetToRunAtStartup()
+            };
+            autostartMenuItem.Click += AutostartMenuItem_Click;
+            _notifyIcon.ContextMenuStrip.Items.Add(autostartMenuItem);
+
+            // Separator
+            _notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
+
+            // "Configure hotkey..." menu item (button)
+            _notifyIcon.ContextMenuStrip.Items.Add("Configure Hotkey...", null, MenuConfigureHotkey_Click);
+
+            // "Monochromatic Icon" menu item (checkbox)
+            var monochromaticIconMenuItem = new ToolStripMenuItem("Monochromatic Icon")
+            {
+                CheckOnClick = true,
+                Checked = _settingsManager.GetMonochromaticSysTrayIcon()
+            };
+            monochromaticIconMenuItem.Click += MonochromaticIconMenuItem_Click;
+            _notifyIcon.ContextMenuStrip.Items.Add(monochromaticIconMenuItem);
+
+            // Separator
+            _notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator());
+
+            // "Exit" menu item (button)
+            _notifyIcon.ContextMenuStrip.Items.Add("Exit", null, MenuExit_Click);
         }
 
-        // Loads the system tray icon
-        private void LoadSystemTrayIcon() {
-        string iconResourceName = settingsManager.GetMonochromaticSysTrayIcon() ? "Toggle_Muter.mono_icon.ico" : "Toggle_Muter.black_icon.ico";
-        
-        using (var iconStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(iconResourceName)) {
-                if (iconStream != null) {
-                    notifyIcon.Icon = new Icon(iconStream);
+        // Load the system tray icon based on the settings
+        private void LoadSystemTrayIcon()
+        {
+            string iconResourceName = _settingsManager.GetMonochromaticSysTrayIcon()
+                ? "Toggle_Muter.mono_icon.ico"
+                : "Toggle_Muter.black_icon.ico";
+
+            using (var iconStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(iconResourceName))
+            {
+                if (iconStream != null)
+                {
+                    _notifyIcon.Icon = new Icon(iconStream);
                 }
-                else {
-                    MessageBox.Show("Failed to load embedded icon resource.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                else
+                {
+                    MessageBox.Show("Failed to load the system tray icon.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
-            }   
-        }
-
-        // Check if app is set to run at Startup
-        private bool IsAppSetToRunAtStartup() {
-            using RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
-            return key?.GetValue("Toggle Muter") != null;
-        }
-
-        // Set the app to run at Startup
-        private void SetAppToRunAtStartup(bool runAtStartup) {
-            using RegistryKey? key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
-            if (runAtStartup) {
-                key?.SetValue("Toggle Muter", "\"" + Application.ExecutablePath + "\"");
-            }
-            else {
-                key?.DeleteValue("Toggle Muter", false);
             }
         }
 
-        #region Context Menu Event Handlers
+        // Check if the application is set to run at startup
+        private bool IsAppSetToRunAtStartup()
+        {
+            using (var key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true))
+            {
+                return key?.GetValue("Toggle Muter") != null;
+            }
+        }
+
+        // Set the application to run at startup based on the provided value
+        private void SetAppToRunAtStartup(bool runAtStartup)
+        {
+            using (var key = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true))
+            {
+                if (runAtStartup)
+                {
+                    key?.SetValue("Toggle Muter", Application.ExecutablePath);
+                }
+                else
+                {
+                    key?.DeleteValue("Toggle Muter", false);
+                }
+            }
+        }
 
         // Event handler for the "Configure Hotkey..." menu item
         private void MenuConfigureHotkey_Click(object? sender, EventArgs e)
         {
-            if (configureHotkeyForm == null || configureHotkeyForm.IsDisposed)
+            if (_configureHotkeyForm == null || _configureHotkeyForm.IsDisposed)
             {
-                // Dispose of the old instance if it exists
-                configureHotkeyForm?.Dispose();
-
-                // Create a new instance
-                configureHotkeyForm = new ConfigureHotkeyForm(settingsManager);
-                configureHotkeyForm.Show();
+                _configureHotkeyForm?.Dispose();
+                _configureHotkeyForm = new ConfigureHotkeyForm(_settingsManager);
+                _configureHotkeyForm.Show();
             }
             else
             {
-                // Bring the existing instance to the foreground
-                configureHotkeyForm.Focus();
+                _configureHotkeyForm.BringToFront();
             }
         }
 
-       // Event handler for the "Monochromatic Icon" menu item
-        private void MonochromaticIconMenuItem_Click(object? sender, EventArgs e) {
-            if (sender is ToolStripMenuItem menuItem) {
-                bool isChecked = menuItem.Checked;
-
-                settingsManager.SetMonochromaticSysTrayIcon(isChecked);
-
+        // Event handler for the "Monochromatic Icon" menu item
+        private void MonochromaticIconMenuItem_Click(object? sender, EventArgs e)
+        {
+            if (sender is ToolStripMenuItem menuItem && menuItem != null)
+            {
+                _settingsManager.SetMonochromaticSysTrayIcon(menuItem.Checked);
                 LoadSystemTrayIcon();
             }
         }
 
         // Event handler for the "Autostart" menu item
-        private void AutostartMenuItem_Click(object? sender, EventArgs e) {
-            if (sender is ToolStripMenuItem menuItem) {
-                bool isChecked = menuItem.Checked;
-                SetAppToRunAtStartup(isChecked);
+        private void AutostartMenuItem_Click(object? sender, EventArgs e)
+        {
+            if (sender is ToolStripMenuItem menuItem)
+            {
+                SetAppToRunAtStartup(menuItem?.Checked ?? false);
             }
         }
 
         // Event handler for the "Exit" menu item
-        private void MenuExit_Click(object? sender, EventArgs e) {
+        private void MenuExit_Click(object? sender, EventArgs e)
+        {
             Close();
-            configureHotkeyForm?.Dispose();
         }
 
-        #endregion
+        // Event handler for the form closing event
+        private void Form_FormClosing(object? sender, FormClosingEventArgs e)
+        {
+            GlobalKeyboardHook.UnregisterHook();
+            _configureHotkeyForm?.Dispose();
+        }
 
-        #region Audio Adjustment
+        // Adjust the mute status of the current application in focus
+        public void AdjustMuteStatus()
+        {
+            GetWindowThreadProcessId(GetForegroundWindow(), out var processId);
 
-        [DllImport("user32.dll")]
-        private static extern IntPtr GetForegroundWindow();
-        [DllImport("user32.dll", SetLastError = true)]
-        static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
-
-        // Adjusts the mute status based on the application in focus
-        public void AdjustMuteStatus() {
-            GetWindowThreadProcessId(GetForegroundWindow(), out var processID);
-
-            var muteStatus = VolumeMixer.GetApplicationMute((int)processID);
-            if (muteStatus == null) {
-                Console.WriteLine("The audio session of the application in focus could not be detected");
+            var muteStatus = VolumeMixer.GetApplicationMute((int)processId);
+            if (muteStatus == null)
+            {
+                Debug.WriteLine("The audio session of the application in focus could not be detected.");
                 return;
             }
 
-            VolumeMixer.SetApplicationMute((int)processID, !muteStatus.Value);
-            Console.WriteLine($"Current application '{processID}' has been {(muteStatus.Value ? "unmuted" : "muted")}");
+            VolumeMixer.SetApplicationMute((int)processId, !muteStatus.Value);
+            Debug.WriteLine($"Current application '{processId}' has been {(muteStatus.Value ? "unmuted" : "muted")}.");
         }
 
-        #endregion
-    } 
+        // Import the necessary Win32 API functions
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+    }
 }

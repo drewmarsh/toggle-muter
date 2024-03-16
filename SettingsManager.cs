@@ -1,33 +1,33 @@
-using System.Windows.Forms.Design;
+namespace Toggle_Muter
+{
+    public class SettingsManager
+    {
+        private readonly Form _mainForm;
+        private readonly GlobalKeyboardHook _keyboardHook;
+        private readonly string _settingsFilePath = "settings.ini";
 
-namespace Toggle_Muter {
-    public partial class SettingsManager : System.Windows.Forms.Form {
-        private Form mainForm;
-        private GlobalKeyboardHook keyboardHook;
-        private const bool DEFAULT_MONOCHROMATIC_SYS_TRAY_ICON = true; // Default system tray icon style is monochromatic
-        private static readonly int[] UNBOUND_KEY_CODES = {};
-        private const string UNBOUND_KEY_TEXT = "";
-         private int[] keyCodes;
-        private string keyText;
-        private bool monochromaticSysTrayIcon;
-        private string settingsFilePath = "settings.ini";
-        
-        public SettingsManager(Form mainForm, GlobalKeyboardHook keyboardHook) {
+        private const bool DefaultMonochromaticSysTrayIcon = true;
+        private static readonly int[] UnboundKeyCodes = Array.Empty<int>();
+        private const string UnboundKeyText = "";
+
+        private int[]? _keyCodes;
+        private string? _keyText;
+        private bool _monochromaticSysTrayIcon;
+
+        public SettingsManager(Form mainForm, GlobalKeyboardHook keyboardHook)
+        {
+            _mainForm = mainForm;
+            _keyboardHook = keyboardHook;
             ReadValuesFromSettings();
-            this.mainForm = mainForm; // Initialize mainForm
-            this.keyboardHook = keyboardHook;
         }
 
-        #region Read/Write settings.ini 
+        // Read values from settings.ini
+        private void ReadValuesFromSettings()
+        {
+            try
+            {
+                string[] lines = File.ReadAllLines(_settingsFilePath);
 
-        // Method to read values from settings.ini
-        private void ReadValuesFromSettings() {
-
-            try {
-                // Read all lines from the settings file
-                string[] lines = File.ReadAllLines(settingsFilePath);
-
-                // Loop through each line and parse key-value pairs
                 foreach (string line in lines)
                 {
                     string[] parts = line.Split('=');
@@ -40,52 +40,45 @@ namespace Toggle_Muter {
                         switch (key)
                         {
                             case "KeyCodes":
-                                keyCodes = value.Split(',').Select(int.Parse).ToArray();
+                                _keyCodes = value.Split(',').Select(int.Parse).ToArray();
                                 break;
                             case "KeyText":
-                                keyText = value;
+                                _keyText = value;
                                 break;
                             case "MonochromaticSysTrayIcon":
-                                monochromaticSysTrayIcon = Convert.ToBoolean(value);
-                            break;
+                                _monochromaticSysTrayIcon = Convert.ToBoolean(value);
+                                break;
                         }
                     }
                 }
             }
-            catch (Exception ex) {
-                // Handle exception for when the settings.ini file is not found
-                keyCodes = UNBOUND_KEY_CODES;
-                keyText = UNBOUND_KEY_TEXT;
-                monochromaticSysTrayIcon = DEFAULT_MONOCHROMATIC_SYS_TRAY_ICON;
+            catch (Exception ex)
+            {
+                // Handle exception when settings.ini is not found or has invalid format
+                _keyCodes = UnboundKeyCodes;
+                _keyText = UnboundKeyText;
+                _monochromaticSysTrayIcon = DefaultMonochromaticSysTrayIcon;
 
-                // Check if the settings.ini file already exists
-                if (File.Exists("settings.ini")) {
-                    // Delete the file and create a new one
-                    File.Delete("settings.ini");
-                }
-                
-                using (StreamWriter sw = new StreamWriter("settings.ini")) {
-                        sw.WriteLine($"KeyCode={keyCodes}");
-                        sw.WriteLine($"KeyText={keyText}");
-                        sw.WriteLine($"MonochromaticSysTrayIcon={monochromaticSysTrayIcon}");
+                if (File.Exists(_settingsFilePath))
+                {
+                    File.Delete(_settingsFilePath);
                 }
 
-                SetKeyCodesAndText(keyCodes, keyText);
-                SetMonochromaticSysTrayIcon(monochromaticSysTrayIcon);
-
-                Console.WriteLine($"Error reading settings.ini, reading default settings instead: {ex.Message}");
+                WriteValuesToSettings();
+                Console.WriteLine($"Error reading settings.ini, using default settings instead: {ex.Message}");
             }
         }
 
+        // Write values to settings.ini
         private void WriteValuesToSettings()
         {
             try
             {
-                using (StreamWriter writer = new StreamWriter(settingsFilePath))
+                using (StreamWriter writer = new StreamWriter(_settingsFilePath))
                 {
-                    writer.WriteLine($"KeyCodes={string.Join(",", keyCodes)}");
-                    writer.WriteLine($"KeyText={keyText}");
-                    writer.WriteLine($"MonochromaticSysTrayIcon={monochromaticSysTrayIcon}");
+                    writer.WriteLine($"KeyCodes={string.Join(",", _keyCodes ?? UnboundKeyCodes)}");
+                    writer.WriteLine($"KeyText={_keyText}");
+                    writer.WriteLine($"MonochromaticSysTrayIcon={_monochromaticSysTrayIcon}");
                 }
             }
             catch (Exception ex)
@@ -94,42 +87,39 @@ namespace Toggle_Muter {
             }
         }
 
-        #endregion
-
-        #region Setters
-
-        public void SetKeyCodesAndText(int[] KEY_CODES, string KEY_TEXT)
+        // Set key codes and text
+        public void SetKeyCodesAndText(int[] keyCodes, string keyText)
         {
             GlobalKeyboardHook.UnregisterHook();
-            keyCodes = KEY_CODES;
-            keyText = KEY_TEXT;
+            _keyCodes = keyCodes;
+            _keyText = keyText;
             GlobalKeyboardHook.RegisterHook();
             WriteValuesToSettings();
         }
 
-        public void SetMonochromaticSysTrayIcon(bool SYS_TRAY_ICON_STYLE) {
-            monochromaticSysTrayIcon = SYS_TRAY_ICON_STYLE;
+        // Set monochromatic system tray icon style
+        public void SetMonochromaticSysTrayIcon(bool monochromaticSysTrayIcon)
+        {
+            _monochromaticSysTrayIcon = monochromaticSysTrayIcon;
             WriteValuesToSettings();
         }
 
-        #endregion
-
-        #region Getters
-
+        // Get key codes
         public int[] GetKeyCodes()
         {
-            return keyCodes ?? new int[0];
+            return _keyCodes ?? UnboundKeyCodes;
         }
 
+        // Get key text
         public string GetKeyText()
         {
-            return keyText;
+            return _keyText ?? UnboundKeyText;
         }
 
-        public bool GetMonochromaticSysTrayIcon() {
-            return monochromaticSysTrayIcon;
+        // Get monochromatic system tray icon style
+        public bool GetMonochromaticSysTrayIcon()
+        {
+            return _monochromaticSysTrayIcon;
         }
-
-        #endregion
     }
 }

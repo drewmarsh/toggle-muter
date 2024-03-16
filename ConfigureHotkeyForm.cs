@@ -1,14 +1,14 @@
 namespace Toggle_Muter {
     public partial class ConfigureHotkeyForm : System.Windows.Forms.Form {
         private HotkeyTextbox hotkeyTextbox;
-        private SettingsManager settingsManager;
+        private SettingsManager _settingsManager;
         private const int ButtonSpacing = 10;
         private Button confirmButton;
         private Button closeButton;
         
         public ConfigureHotkeyForm(SettingsManager settingsManager) {
             InitializeComponent();
-            this.settingsManager = settingsManager;
+            _settingsManager = settingsManager;
             ShowHotkeyConfig();
 
             // Add the "Confirm" button on the left
@@ -69,7 +69,7 @@ namespace Toggle_Muter {
         }
 
         private void ConfirmButton_Click(object? sender, EventArgs e) {
-            settingsManager.SetKeyCodesAndText(hotkeyTextbox.GetSelectedKeyCodes(), hotkeyTextbox.GetTextboxText());
+            _settingsManager.SetKeyCodesAndText(hotkeyTextbox.GetSelectedKeyCodes(), hotkeyTextbox.GetTextboxText());
             hotkeyTextbox.UpdateHotkeyText();
             hotkeyTextbox.ForeColor = Color.Black;
         }
@@ -78,7 +78,7 @@ namespace Toggle_Muter {
             Close();
         }
 
-        private void HotkeyTextbox_WidthChanged(object sender, EventArgs e) {
+        private void HotkeyTextbox_WidthChanged(object? sender, EventArgs e) {
             CenterHotkeyTextbox();
         }
 
@@ -86,13 +86,13 @@ namespace Toggle_Muter {
             hotkeyTextbox.Location = new Point((ClientSize.Width - hotkeyTextbox.Width) / 2, 19);
         }
 
-        private void ConfigureHotkeyForm_Activated(object sender, EventArgs e) {
+        private void ConfigureHotkeyForm_Activated(object? sender, EventArgs e) {
             // Enable the Confirm and Close buttons when the form is activated
             confirmButton.Enabled = true;
             closeButton.Enabled = true;
         }
 
-        private void ConfigureHotkeyForm_Deactivated(object sender, EventArgs e) {
+        private void ConfigureHotkeyForm_Deactivated(object? sender, EventArgs e) {
             // Disable the Confirm and Close buttons when the form loses focus
             confirmButton.Enabled = false;
             closeButton.Enabled = false;

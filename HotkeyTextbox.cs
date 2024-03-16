@@ -1,22 +1,22 @@
-namespace Toggle_Muter {
+namespace Toggle_Muter
+{
     public class HotkeyTextbox : TextBox
     {
         private const int MaxWidth = 200;
         private const int MinWidth = 100;
-        private readonly List<Keys> hotkeys = new List<Keys>();
-        private int[] selectedKeyCodes;
-        private string keyText;
-        private bool isNewKeyPressed = true; // Flag to track if a new key is pressed
-        private Keys lastKeyPressed = Keys.None; // Track the last key pressed
-        public event EventHandler WidthChanged;
-        private ConfigureHotkeyForm _configureHotkeyForm;
-        private SettingsManager _settingsManager;
+        private readonly List<Keys> _hotkeys = new List<Keys>();
+        private readonly SettingsManager _settingsManager;
+        private int[] _selectedKeyCodes;
+        private string _keyText;
+        private bool _isNewKeyPressed = true;
+        private Keys _lastKeyPressed = Keys.None;
+
+        public event EventHandler? WidthChanged;
 
         public HotkeyTextbox(int[] initialKeyCodes, string initialKeyText, ConfigureHotkeyForm configureHotkeyForm, SettingsManager settingsManager) : base()
         {
-            selectedKeyCodes = initialKeyCodes;
-            keyText = initialKeyText;
-            _configureHotkeyForm = configureHotkeyForm;
+            _selectedKeyCodes = initialKeyCodes;
+            _keyText = initialKeyText;
             _settingsManager = settingsManager;
             SetInitialText();
             TextAlign = HorizontalAlignment.Center;
@@ -26,58 +26,50 @@ namespace Toggle_Muter {
             LostFocus += HotkeyTextbox_LostFocus;
         }
 
-        private void HotkeyTextbox_KeyDown(object sender, KeyEventArgs e)
+        // Handles the KeyDown event of the HotkeyTextbox control.
+        private void HotkeyTextbox_KeyDown(object? sender, KeyEventArgs e)
         {
-            if (sender == null || e == null) { return; }
-
             e.SuppressKeyPress = true;
 
             Keys key = (Keys)char.ToUpper((char)e.KeyCode);
 
             // Ignore repeated events for the same key while it's held down
-            if (!isNewKeyPressed && key == lastKeyPressed)
+            if (!_isNewKeyPressed && key == _lastKeyPressed)
             {
                 return;
             }
 
-            if (isNewKeyPressed)
+            if (_isNewKeyPressed)
             {
                 // Clear the hotkeys list if a new key is pressed
-                hotkeys.Clear();
-                isNewKeyPressed = false;
+                _hotkeys.Clear();
+                _isNewKeyPressed = false;
             }
 
-            // Add the newly pressed key
-            hotkeys.Add(key);
-            lastKeyPressed = key;
+            // Add the newly pressed key to the hotkeys list
+            _hotkeys.Add(key);
+            _lastKeyPressed = key;
             UpdateHotkeyText();
         }
 
-        private void HotkeyTextbox_KeyUp(object sender, KeyEventArgs e)
+        // Handles the KeyUp event of the HotkeyTextbox control.
+        private void HotkeyTextbox_KeyUp(object? sender, KeyEventArgs e)
         {
-            if (sender == null || e == null) { return; }
-
             e.SuppressKeyPress = true;
 
             // Set the flag to indicate that a new key can be pressed
-            isNewKeyPressed = true;
-            lastKeyPressed = Keys.None;
+            _isNewKeyPressed = true;
+            _lastKeyPressed = Keys.None;
         }
 
-        
+        // Updates the text of the HotkeyTextbox control based on the selected hotkeys.
         public void UpdateHotkeyText()
         {
-            if (hotkeys.Count == 0)
-            {
-                Text = "None";
-            }
-            else
-            {
-                Text = string.Join(" + ", hotkeys.Select(k => k.ToString()));
-            }
+            Text = _hotkeys.Count == 0 ? "None" : string.Join(" + ", _hotkeys.Select(k => k.ToString()));
             AdjustWidth();
         }
 
+        // Adjusts the width of the HotkeyTextbox control based on its text content.
         private void AdjustWidth()
         {
             using (Graphics g = CreateGraphics())
@@ -92,41 +84,42 @@ namespace Toggle_Muter {
             }
         }
 
+        // Raises the WidthChanged event.
         protected virtual void OnWidthChanged(EventArgs e)
         {
             WidthChanged?.Invoke(this, e);
         }
 
+        // Sets the initial text of the HotkeyTextbox control based on the selected key codes and key text.
         public void SetInitialText()
         {
-            hotkeys.Clear();
-            if (selectedKeyCodes == null || selectedKeyCodes.Length == 0)
+            _hotkeys.Clear();
+            if (_selectedKeyCodes == null || _selectedKeyCodes.Length == 0)
             {
-                if (string.IsNullOrEmpty(keyText))
+                if (string.IsNullOrEmpty(_keyText))
                 {
-                    UpdateHotkeyText(); // This will set the Text to "None"
+                    UpdateHotkeyText();
                     return;
                 }
                 else
                 {
-                    // Handle the case where keyText is not null or empty, but selectedKeyCodes is null or empty
-                    Text = keyText;
+                    Text = _keyText;
                     AdjustWidth();
                     return;
                 }
             }
 
-            foreach (int keyCode in selectedKeyCodes)
+            foreach (int keyCode in _selectedKeyCodes)
             {
-                hotkeys.Add((Keys)keyCode);
+                _hotkeys.Add((Keys)keyCode);
             }
             UpdateHotkeyText();
-            AdjustWidth(); // Adjust width based on initial text
+            AdjustWidth();
         }
 
         public int[] GetSelectedKeyCodes()
         {
-            return hotkeys.Select(k => (int)k).ToArray();
+            return _hotkeys.Select(k => (int)k).ToArray();
         }
 
         public string GetTextboxText()
@@ -134,18 +127,21 @@ namespace Toggle_Muter {
             return Text;
         }
 
-        private void HotkeyTextbox_GotFocus(object sender, EventArgs e)
+        // Handles the GotFocus event of the HotkeyTextbox control.
+        private void HotkeyTextbox_GotFocus(object? sender, EventArgs e)
         {
             ForeColor = Color.Black;
             Text = string.Empty;
-            hotkeys.Clear();
-            lastKeyPressed = Keys.None;
-            isNewKeyPressed = true;
+            _hotkeys.Clear();
+            _lastKeyPressed = Keys.None;
+            _isNewKeyPressed = true;
         }
 
-        private void HotkeyTextbox_LostFocus(object sender, EventArgs e)
+        // Handles the LostFocus event of the HotkeyTextbox control.
+        private void HotkeyTextbox_LostFocus(object? sender, EventArgs e)
         {
-            if (Text != _settingsManager.GetKeyText()) {
+            if (Text != _settingsManager.GetKeyText())
+            {
                 ForeColor = BackColor;
             }
         }
