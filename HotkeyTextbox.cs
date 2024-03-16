@@ -33,6 +33,9 @@ namespace Toggle_Muter
 
             Keys key = (Keys)char.ToUpper((char)e.KeyCode);
 
+            // Ignore the ALT key
+            if (key == Keys.Menu) { return; }
+
             // Ignore repeated events for the same key while it's held down
             if (!_isNewKeyPressed && key == _lastKeyPressed)
             {
