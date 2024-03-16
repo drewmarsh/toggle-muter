@@ -10,8 +10,8 @@ namespace Toggle_Muter
         private static readonly int[] UnboundKeyCodes = Array.Empty<int>();
         private const string UnboundKeyText = "";
 
-        private int[]? _keyCodes;
-        private string? _keyText;
+        private int[] _keyCodes;
+        private string _keyText;
         private bool _monochromaticSysTrayIcon;
 
         public SettingsManager(Form mainForm, GlobalKeyboardHook keyboardHook)
@@ -76,7 +76,7 @@ namespace Toggle_Muter
             {
                 using (StreamWriter writer = new StreamWriter(_settingsFilePath))
                 {
-                    writer.WriteLine($"KeyCodes={string.Join(",", _keyCodes ?? UnboundKeyCodes)}");
+                    writer.WriteLine($"KeyCodes={string.Join(",", _keyCodes)}");
                     writer.WriteLine($"KeyText={_keyText}");
                     writer.WriteLine($"MonochromaticSysTrayIcon={_monochromaticSysTrayIcon}");
                 }
@@ -113,7 +113,7 @@ namespace Toggle_Muter
         // Get key text
         public string GetKeyText()
         {
-            return _keyText ?? UnboundKeyText;
+            return _keyText;
         }
 
         // Get monochromatic system tray icon style
@@ -122,4 +122,4 @@ namespace Toggle_Muter
             return _monochromaticSysTrayIcon;
         }
     }
-}
+} 
