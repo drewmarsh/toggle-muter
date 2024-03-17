@@ -9,6 +9,8 @@ namespace Toggle_Muter {
         public ConfigureHotkeyForm(SettingsManager settingsManager) {
             InitializeComponent();
             _settingsManager = settingsManager;
+            Icon = Program.LoadApplicationIcon(); // Set the application icon
+
             ShowHotkeyConfig();
 
             // Add the "Confirm" button on the left

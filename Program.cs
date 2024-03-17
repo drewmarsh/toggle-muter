@@ -14,16 +14,22 @@ static class Program
         Application.SetCompatibleTextRenderingDefault(false);
 
         // Set the icon for the application
+        Icon appIcon = LoadApplicationIcon();
+        Application.Run(new Form() { Icon = appIcon });
+    }
+
+    public static Icon LoadApplicationIcon()
+    {
         using (Stream iconStream = Assembly.GetExecutingAssembly().GetManifestResourceStream("Toggle_Muter.application_icon.ico")!)
         {
             if (iconStream != null)
             {
-                Icon appIcon = new Icon(iconStream);
-                Application.Run(new Form() { Icon = appIcon });
+                return new Icon(iconStream);
             }
             else
             {
                 MessageBox.Show("Failed to load embedded icon resource.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return SystemIcons.Application; // Return the default application icon
             }
         }
     }
