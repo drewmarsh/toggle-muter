@@ -1,3 +1,5 @@
+using System.Reflection;
+
 namespace Toggle_Muter
 {
     public class SettingsManager
@@ -18,6 +20,13 @@ namespace Toggle_Muter
         {
             _mainForm = mainForm;
             _keyboardHook = keyboardHook;
+
+            // Get the full path of the currently executing assembly (i.e., the application's executable file)
+            // This ensures that the settings.ini file is created/read from the same directory as the executable
+            string executingAssemblyPath = Assembly.GetExecutingAssembly().Location;
+            string executingAssemblyDirectory = Path.GetDirectoryName(executingAssemblyPath) ?? AppDomain.CurrentDomain.BaseDirectory;
+            _settingsFilePath = Path.Combine(executingAssemblyDirectory, "settings.ini");
+
             ReadValuesFromSettings();
         }
 
