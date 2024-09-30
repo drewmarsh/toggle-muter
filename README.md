@@ -1,5 +1,5 @@
 <p align="center">
-  Toggle Muter is a lightweight system tray application that uses a custom hotkey to toggle mute/unmute the current application in focus
+  Toggle Muter is a lightweight system tray application that uses a custom hotkey to mute/unmute the current application in focus
   <br><br><a href="https://github.com/drewmarsh/toggle-muter">
     <img src="toggle_muter_banner.png" width="598" alt="Banner">
   </a>
