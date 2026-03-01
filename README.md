@@ -9,11 +9,11 @@
 > [!NOTE]
 > When you launch the application for the first time, a "Windows protected your PC" pop-up window may appear, preventing the "unrecognized app from starting". To start the application, click on  <ins>More info</ins> and then click the `Run anyway` button.
 
-### [Linux (bash script) Download](https://raw.githubusercontent.com/drewmarsh/toggle-muter/main/linux/toggle-muter.sh)
+### [Linux (bash script) Download](https://raw.githubusercontent.com/drewmarsh/toggle-muter/refs/heads/main/linux/toggle-muter-linux.sh)
 
 **1. Download the script**
 ```bash
-curl -o toggle-muter.sh https://raw.githubusercontent.com/drewmarsh/toggle-muter/main/linux/toggle-muter.sh
+curl -o toggle-muter.sh https://raw.githubusercontent.com/drewmarsh/toggle-muter/refs/heads/main/linux/toggle-muter-linux.sh
 ```
 
 **2. Install dependencies**
