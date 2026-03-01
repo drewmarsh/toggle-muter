@@ -5,21 +5,21 @@
   <br><br>Toggle Muter uses a custom hotkey to mute/unmute the current application in focus. Available for <a href="#windows-portable-tray-application-download">Windows</a> as a lightweight system tray application and for <a href="#linux-bash-script-download">Linux</a> as a bash script.<br><br>
 </p>
 
-## [Windows (portable tray application) Download](https://github.com/drewmarsh/toggle-muter/releases/download/v1.0.1/toggle-muter-v1.0.1_portable.zip)
+## [Windows (portable tray application) Download](https://github.com/drewmarsh/toggle-muter/releases/download/v1.0.2/toggle-muter-windows_v1.0.2_portable.zip)
 > [!NOTE]
 > When you launch the application for the first time, a "Windows protected your PC" pop-up window may appear, preventing the "unrecognized app from starting". To start the application, click on <ins>More info</ins> and then click the `Run anyway` button.
 <br>
 
-## [Linux (bash script) Download](https://raw.githubusercontent.com/drewmarsh/toggle-muter/refs/heads/main/linux/toggle-muter-linux.sh)
+## [Linux (bash script) Download](https://github.com/drewmarsh/toggle-muter/releases/download/v1.0.2/toggle-muter-linux_v1.0.2_script.sh)
 
 **1. Download the script**
 ```bash
-curl -o toggle-muter-linux.sh https://raw.githubusercontent.com/drewmarsh/toggle-muter/refs/heads/main/linux/toggle-muter-linux.sh
+curl -o toggle-muter-linux_v1.0.2_script.sh https://raw.githubusercontent.com/drewmarsh/toggle-muter/refs/heads/main/linux/toggle-muter-linux.sh
 ```
 
 **2. Grant the script execute permissions**
 ```bash
-chmod +x toggle-muter-linux.sh
+chmod +x toggle-muter-linux_v1.0.2_script.sh
 ```
 
 **3. Install dependencies**
@@ -31,6 +31,6 @@ sudo apt install xdotool pulseaudio-utils libnotify-bin
 
 ### **Linux Mint**:
 - Navigate to `Keyboard` → `Shortcuts` → `Add custom shortcut`
-- Name the shortcut and then set the command to the full path of the script (e.g. `/home/username/scripts/toggle-muter-linux.sh`)
+- Name the shortcut and then set the command to the full path of the script (e.g. `/home/username/scripts/toggle-muter-linux_v1.0.2_script.sh`)
 - Under `Keyboard shortcuts`, click the name of the shortcut that was just added
 - Under `Keyboard bindings`, set the binding to your desired hotkey
