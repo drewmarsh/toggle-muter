@@ -14,12 +14,12 @@
 
 **1. Download the script**
 ```bash
-curl -o toggle-muter.sh https://raw.githubusercontent.com/drewmarsh/toggle-muter/refs/heads/main/linux/toggle-muter-linux.sh
+curl -o toggle-muter-linux.sh https://raw.githubusercontent.com/drewmarsh/toggle-muter/refs/heads/main/linux/toggle-muter-linux.sh
 ```
 
 **2. Grant the script execute permissions**
 ```bash
-chmod +x toggle-muter.sh
+chmod +x toggle-muter-linux.sh
 ```
 
 **3. Install dependencies**
