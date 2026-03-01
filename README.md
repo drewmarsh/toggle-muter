@@ -31,6 +31,6 @@ sudo apt install xdotool pulseaudio-utils libnotify-bin
 
 ### **Linux Mint**:
 - Navigate to `Keyboard` → `Shortcuts` → `Add custom shortcut`
-- Name the shortcut and then set the command to the full path of the script (e.g. `/home/username/scripts/toggle-muter.sh`)
+- Name the shortcut and then set the command to the full path of the script (e.g. `/home/username/scripts/toggle-muter-linux.sh`)
 - Under `Keyboard shortcuts`, click the name of the shortcut that was just added
 - Under `Keyboard bindings`, set the binding to your desired hotkey
