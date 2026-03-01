@@ -12,22 +12,22 @@
 
 ## [Linux (bash script) Download](https://github.com/drewmarsh/toggle-muter/releases/download/v1.0.2/toggle-muter-linux_v1.0.2.sh)
 
-**1. Download the script**
+1. Download the script
 ```bash
 curl -o toggle-muter-linux_v1.0.2.sh https://raw.githubusercontent.com/drewmarsh/toggle-muter/refs/heads/main/linux/toggle-muter-linux.sh
 ```
 
-**2. Grant the script execute permissions**
+2. Grant the script execute permissions
 ```bash
 chmod +x toggle-muter-linux_v1.0.2.sh
 ```
 
-**3. Install dependencies**
+3. Install dependencies
 ```bash
 sudo apt install xdotool pulseaudio-utils libnotify-bin
 ```
 
-**4. Bind it to a hotkey (varies depending on the distro)**
+4. Bind it to a hotkey (varies by distro)
 
 ### **Linux Mint**:
 - Navigate to `Keyboard` → `Shortcuts` → `Add custom shortcut`
